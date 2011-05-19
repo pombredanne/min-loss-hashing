@@ -73,9 +73,15 @@ colors=[1 0 0
 if (~iscell(XMatrix))
   errorbar1 = errorbar(XMatrix(:,:), YMatrix(:,:), EMatrix(:,:), 'LineWidth', 3);
   set(errorbar1(1), 'DisplayName', names{1}, 'LineWidth', 3, 'Color', colors(1,:));
-  set(errorbar1(2), 'DisplayName', names{2}, 'LineWidth', 3, 'Color', colors(2,:));
-  set(errorbar1(3), 'DisplayName', names{3}, 'LineWidth', 3, 'Color', colors(3,:));
-  set(errorbar1(4), 'DisplayName', names{4}, 'LineWidth', 3, 'Color', colors(4,:));
+  if (numel(errorbar1) > 1)
+    set(errorbar1(2), 'DisplayName', names{2}, 'LineWidth', 3, 'Color', colors(2,:));
+  end
+  if (numel(errorbar1) > 2)
+    set(errorbar1(3), 'DisplayName', names{3}, 'LineWidth', 3, 'Color', colors(3,:));
+  end
+  if (numel(errorbar1) > 3)
+    set(errorbar1(4), 'DisplayName', names{4}, 'LineWidth', 3, 'Color', colors(4,:));
+  end
   if (numel(errorbar1) > 4)
     set(errorbar1(5), 'DisplayName', names{5}, 'LineWidth', 3, 'Color', colors(5,:));
   end
