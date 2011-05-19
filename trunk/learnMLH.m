@@ -1,4 +1,4 @@
-function [best_ap best_prec best_W Wall best_params] = learnMLH(data, param, verbose, initW)
+function [best_ap best_W Wall best_params] = learnMLH(data, param, verbose, initW)
 
 Ntraining = data.Ntraining;
 NtrainingSqr = Ntraining^2;
@@ -58,7 +58,6 @@ end
 % initialization
 best_ap = -Inf;
 avg_err = 0;
-best_prec = -Inf;
 best_W = [];
 best_params = param;
 ncases = size_batches;

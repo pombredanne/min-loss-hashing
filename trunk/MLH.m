@@ -35,7 +35,7 @@ for shrink_w = shrink_w_set
   param.doval = doval;
   param.shrink_eta = shrink_eta;
     
-  [ap prec W Wall params] = learnMLH(data, param, verbose, initW);
+  [ap W Wall params] = learnMLH(data, param, verbose, initW);
 
   WW(n).ap = ap;
   WW(n).W = W;
