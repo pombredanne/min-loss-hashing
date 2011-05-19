@@ -17,7 +17,7 @@ for rho = rho_set
 for iloss = 1:size(ratio_loss_set, 1)
 for eta = eta_set
 for shrink_w = shrink_w_set
-     
+  
   param.size_batches = size_batches;
   param.nb = nb;
   param.ratio_loss_pos = ratio_loss_set(iloss, 1);
