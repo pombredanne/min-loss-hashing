@@ -9,6 +9,8 @@ It will store the results for other datasets too.
 
 data/ contains dataset files -- should be downloaded separately from
 
+Files for small datasets should be copied under data/kulis/
+
 1- mtx files for creating the small databases (MNIST, LabelMe,
 Peekaboom, Photo-Tourism, Nuresery) could be downloaded from
 http://www.eecs.berkeley.edu/~kulis/data/
