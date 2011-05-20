@@ -202,7 +202,7 @@ for nb = nbs
 
     % validation for lambda in hinge loss
     Wtmp2{nb} = MLH(data_pca, 'hinge', nb, [best_params(nb).eta], .9, [2.5 .5; 2 .5; 1.5 .5; 1.4 .7; 1 1], 100, 'train', 50, best_params(nb).rho, ...
-		    1, 1, 1, .01, 1);
+		    1, 1, 0, .01, 1);
     best_ap = -1;
     for j = 1:numel(Wtmp2{nb})
       fprintf('%.3f %.2f %.2f %.2f\n', Wtmp2{nb}(j).ap, Wtmp2{nb}(j).params.ratio_loss_pos, Wtmp2{nb}(j).params.ratio_loss_neg, Wtmp2{nb}(j).params.eta);
@@ -215,7 +215,7 @@ for nb = nbs
   
     % validation for weight decay parameter
     Wtmp_shrink_w = MLH(data_pca, 'hinge', nb, [best_params(nb).eta], .9, [best_params(nb).ratio_loss_pos best_params(nb).ratio_loss_neg], 100, 'train', ...
-			50, best_params(nb).rho, 1, 1, 1, [.1 .03 .01 .003 .001 .0001], 1);
+			50, best_params(nb).rho, 1, 1, 0, [.1 .03 .01 .003 .001 .0001], 1);
     best_ap = -1;
     for j = 1:numel(Wtmp_shrink_w)
       if (Wtmp_shrink_w(j).ap > best_ap)
@@ -233,7 +233,7 @@ for nb = nbs
                                                                              % (see below)
     rhos(rhos < 1) = [];
     Wtmp_rho = MLH(data_pca, 'hinge', nb, [best_params(nb).eta], .9, [best_params(nb).ratio_loss_pos ...
-		    best_params(nb).ratio_loss_neg], 100, 'train', 100, rhos, 1, 1, 1, best_params(nb).shrink_w, 1); 
+		    best_params(nb).ratio_loss_neg], 100, 'train', 100, rhos, 1, 1, 0, best_params(nb).shrink_w, 1); 
     best_ap = -1;
     for j = 1:numel(Wtmp_rho)
       if (Wtmp_rho(j).ap > best_ap + .005) % only if average precision gets better by .5 percent, it
@@ -247,7 +247,7 @@ for nb = nbs
   end
   
   % % validation for eta (learning rate)
-  % Wtmp_eta = MLH(data_pca, 'hinge', nb, [.1 .03 .01], .9, [1 1], 100, 'train', 50, last_rho*2, 1, 1, 1, .01, 1);
+  % Wtmp_eta = MLH(data_pca, 'hinge', nb, [.1 .03 .01], .9, [1 1], 100, 'train', 50, last_rho*2, 1, 1, 0, best_params(nb).shrink_w, 1);
   % best_ap = -1;
   % for j = 1:numel(Wtmp_eta)
   %   if (Wtmp_eta(j).ap > best_ap)
@@ -260,7 +260,7 @@ for nb = nbs
   
   best_params(nb)
   W{i, nb} = MLH(data_pca, 'hinge', nb, [best_params(nb).eta], .9, [best_params(nb).ratio_loss_pos best_params(nb).ratio_loss_neg], 100, 'trainval', ...
-  		 2000, best_params(nb).rho, 1, 1, 0, best_params(nb).shrink_w, 1);
+  		 2000, best_params(nb).rho, 1, 0, 0, best_params(nb).shrink_w, 1);
   % maybe less than 2000 iterations is fine too
   pmlh(i, nb, :) = zeros(1, max(nbs)+1);
   rmlh(i, nb, :) = zeros(1, max(nbs)+1);
