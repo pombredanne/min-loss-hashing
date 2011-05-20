@@ -183,7 +183,7 @@ data_pca =  do_pca(data, 40);
 clear Wtmp_size_batch Wtmp Wtmp2 Wtmp_rho;
 clear pmlh rmlh;
 
-nbs = [32 64 128 256];
+nbs = [16 32 64 128 256];
 for i = 1:10
 for nb = nbs
   nb
