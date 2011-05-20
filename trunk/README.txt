@@ -9,8 +9,6 @@ It will store the results for other datasets too.
 
 data/ contains dataset files -- should be downloaded separately from
 
-Files for small datasets should be copied under data/kulis/
-
 1- mtx files for creating the small databases (MNIST, LabelMe,
 Peekaboom, Photo-Tourism, Nuresery) could be downloaded from
 http://www.eecs.berkeley.edu/~kulis/data/
@@ -22,10 +20,12 @@ http://www.cs.toronto.edu/~norouzi/get/small-datasets.tar
 3- data/LabelMe_gist.mat is the 22K labelme database availabe at
 http://cs.nyu.edu/~fergus/research/tfw_cvpr08_code.zip
 
+Files for small datasets should be stored under data/kulis/
 
-RUN.m: is the starting point.  It shows how the code has been run for
+
+RUN.m: is the starting point.  It shows how the code can be run for
 small datasets and euclidean 22K LabelMe. It also includes the codes
-for creating the plots.
+for creating the figures.
 
 
 MLH.m: is the function that calls learnMLH useful for validation over
