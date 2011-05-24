@@ -70,6 +70,10 @@ end
 if (~doval)
   data = rmfield(data, 'Xtest');
   data = rmfield(data, 'Ntest');
-  data = rmfield(data, 'DtestTraining');
-  data = rmfield(data, 'WtrueTestTraining');
+  if (isfield(data, 'DtestTraining'))
+    data = rmfield(data, 'DtestTraining');
+  end
+  if (isfield(data, 'WtrueTestTraining'))
+    data = rmfield(data, 'WtrueTestTraining');
+  end
 end
