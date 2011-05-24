@@ -93,7 +93,7 @@ elseif (strcmp(MODE, 'sem-22K-labelme'))
 
 elseif (strcmp(MODE, 'sem-full-mnist') || strcmp(MODE, 'sem-full-mnist2'))
   % Create Semantic full MNIST
-  load('data/mnist-full.mat');
+  load('data/mnist-full.mat'); % has rperm_60k
 
   Ntraining = 60000;
   Ntest = 10000;
@@ -118,12 +118,11 @@ elseif (strcmp(MODE, 'sem-full-mnist') || strcmp(MODE, 'sem-full-mnist2'))
     data.mean_mnist = mean_mnist;
   end
 
-  rperm = randperm(Ntraining);
   data.Ntraining = Ntraining;
   data.Ntest = Ntest;
-  data.Ltraining = mnist_ltrain(rperm);
-  data.Xtraining = X(rperm(1:60000), :);
-  data.WtrueTraining = WtrueTraining(rperm, rperm);
+  data.Ltraining = mnist_ltrain(rperm_60k);
+  data.Xtraining = X(rperm_60k(1:60000), :);
+  data.WtrueTraining = WtrueTraining(rperm_60k, rperm_60k);
   data.Ltest = mnist_ltest;
   data.Xtest = X(60001:end, :);
   data.WtrueTestTraining = WtrueTestTraining;
