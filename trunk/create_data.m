@@ -1,15 +1,10 @@
 function data = create_data(MODE, operand1, operand2, operand3)
-
-if (strcmp(MODE, 'kulis'))
-  fprintf('Creating dataset %s - %s ... ', MODE, operand1);
-else
-  fprintf('Creating dataset %s ... ', MODE);
-end
-
 data.MODE = MODE;
 
 if (strcmp(MODE, 'uniform'))
-  % Create a uniformly distributed synthesize dataset.
+  fprintf('Creating %dd %s dataset ... ', operand1, MODE);
+
+  % Create a uniformly distributed synthetic dataset.
   % parameters
   dtr = operand1;
   Ntraining = 1000; % number training samples
@@ -31,6 +26,8 @@ if (strcmp(MODE, 'uniform'))
   % see bottom for construct_data(...)
   
 elseif (strcmp(MODE, 'euc-22K-labelme'))
+  fprintf('Creating %s dataset ... ', MODE);
+
   % Create the Euclidean 22K labelme dataset.
   load('data/LabelMe_gist', 'ndxtrain', 'ndxtest', 'gist');
 
@@ -52,6 +49,8 @@ elseif (strcmp(MODE, 'euc-22K-labelme'))
   data.gist_mean = gist_mean;
   
 elseif (strcmp(MODE, 'sem-22K-labelme'))
+  fprintf('Creating %s dataset ... ', MODE);
+
   % Create the semantic 22K labelme dataset.
   load('data/LabelMe_gist', 'ndxtrain', 'ndxtest', 'DistLM', 'gist');
   
@@ -100,6 +99,8 @@ elseif (strcmp(MODE, 'sem-22K-labelme'))
   data.max_care = operand2; % used for cross-validation in evalLabelme 
 
 elseif (strcmp(MODE, 'kulis'))
+  fprintf('Creating %s - %s dataset ... ', MODE, operand1);
+  
   % From Brian Kulis's code; Preparing datasets from the BRE paper
   data.MODE = [MODE, ' - ', operand1];
   X = load(['data/kulis/', operand1, '.mtx'])';
