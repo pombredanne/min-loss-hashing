@@ -6,15 +6,15 @@ WtrueTraining = data.WtrueTraining;
 
 if (strcmp(trainset, 'train'))
   % one tenth of the training points are used for validation
-  Ntest = min(ceil(Ntraining / 10), 4000);
+  Ntest = min(ceil(Ntraining / 10), 5000);
   Ntraining = Ntraining - Ntest;
   
   % we re-define test set to be the validation set.
   % this way all the evaluation codes remain unchanged.
-  Xtest = Xtraining(Ntraining+1:end, :);
+  Xtest = Xtraining(:, Ntraining+1:end);
   WtrueTestTraining = WtrueTraining(Ntraining+1:end, 1:Ntraining);
   WtrueTestTraining(WtrueTestTraining  == -1) = 0;
-  Xtraining = Xtraining(1:Ntraining, :);
+  Xtraining = Xtraining(:, 1:Ntraining);
   WtrueTraining = WtrueTraining(1:Ntraining, 1:Ntraining);
   if (isfield(data, 'Dtraining'))
     Dtraining = data.Dtraining(1:Ntraining, 1:Ntraining);  
@@ -68,8 +68,10 @@ if (exist('Xtest') && doval)
   data.Ntest = Ntest;
 end
 if (~doval)
-  data = rmfield(data, 'Xtest');
-  data = rmfield(data, 'Ntest');
+  if (isfield(data, 'Xtest'))
+    data = rmfield(data, 'Xtest');
+    data = rmfield(data, 'Ntest');
+  end
   if (isfield(data, 'DtestTraining'))
     data = rmfield(data, 'DtestTraining');
   end

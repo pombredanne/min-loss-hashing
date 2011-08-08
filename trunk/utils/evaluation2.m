@@ -1,8 +1,9 @@
-function [score, recall] = evaluation2(Wtrue, Dhat, maxn, fig, varargin)
+function [score, recall] = evaluation2(Wtrue, Dhamm, maxn, fig, varargin)
 
 % Input:
 %    Wtrue = true neighbors [Ntest * Ndataset], can be a full matrix NxN
-%    Dhat  = estimated distances
+%    Dhamm  = estimated distances
+%    maxn = number of distinct distance values to be considered
 %    The next inputs are optional:
 %    fig = figure handle
 %    options = just like in the plot command
@@ -20,12 +21,21 @@ function [score, recall] = evaluation2(Wtrue, Dhat, maxn, fig, varargin)
 [Ntest, Ntrain] = size(Wtrue);
 total_good_pairs = sum(Wtrue(:));
 
-[sD indsD] = sort(Dhat(:));
+[sD indsD] = sort(Dhamm(:));
 [u ind] = unique(sD, 'first');
 countu = [ind(2:end); numel(sD)+1] - ind;
 hist = zeros(maxn+1, 1);
 hist(u+1) = countu;
 cumhist = [1; 1+cumsum(hist)];
+
+% for i=1:size(Dhamm,1)
+%   [sD indsD] = sort(Dhamm(i,:)');
+%   [u ind] = unique(sD, 'first');
+%   countu = [ind(2:end); numel(sD)+1] - ind;
+%   hist = zeros(maxn+1, 1);
+%   hist(u+1) = countu;
+%   cumhist = cumhist + [1; 1+cumsum(hist)];
+% end
 
 % find pairs with similar codes
 score = zeros(maxn+1,1);

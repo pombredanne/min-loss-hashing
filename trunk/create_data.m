@@ -3,59 +3,61 @@ function data = create_data(MODE, operand1, operand2, operand3)
 data.MODE = MODE;
 
 if (strcmp(MODE, 'uniform'))
-  % Create uniformly distributed synthesize data:
-
+  % Create a uniformly distributed synthesize dataset.
   % parameters
-  Ntraining = 3000; % number training samples
+  dtr = operand1;
+  Ntraining = 1000; % number training samples
   Ntest = 3000;     % number test samples
   averageNumberNeighbors = 50; % number of ground-truth neighbors for each training point (on average)
   aspectratio = ones(1, dtr);  % aspect ratio of different edge lenghts of the uniform hypercube
 
-  % uniform distribution
-  dtr = operand1;
-
-  Xtraining = rand([Ntraining, dtr]);
+  Xtraining = rand([dtr, Ntraining]);
   for i=1:dtr
-    Xtraining(:,i) = aspectratio(i) * Xtraining(:,i) - aspectratio(i)/2;
+    Xtraining(i,:) = aspectratio(i) * Xtraining(i,:) - aspectratio(i)/2;
   end
-  Xtest = rand([Ntest,dtr]);
+  Xtest = rand([dtr, Ntest]);
   for i=1:dtr
-    Xtest(:,i) = aspectratio(i)*Xtest(:,i) - aspectratio(i)/2;
+    Xtest(i,:) = aspectratio(i)*Xtest(i,:) - aspectratio(i)/2;
   end
 
   data.aspectratio = aspectratio;
-  data = construct_data(Xtraining, Xtest, [Ntraining, Ntest], averageNumberNeighbors, data); 
+  data = construct_data(Xtraining, Xtest, [Ntraining, Ntest], averageNumberNeighbors, [], data); 
   % see bottom for construct_data(...)
   
 elseif (strcmp(MODE, 'euc-22K-labelme'))
-  % Create Euclidean 22K labelme dataset:
+  % Create the Euclidean 22K labelme dataset.
   load('data/LabelMe_gist', 'ndxtrain', 'ndxtest', 'gist');
 
-  X = gist;
+  % data-points are stored in columns
+  X = gist';
   clear gist;
   
-  X = X - ones(size(X,1),1)*mean(X);
-  for i = 1:size(X,1)
-    X(i,:) = X(i,:) / norm(X(i,:));
-  end
+  % center, then normalize data
+  gist_mean = mean(X, 2);
+  X = bsxfun(@minus, X, gist_mean);
+  normX = sqrt(sum(X.^2, 1));
+  X = bsxfun(@rdivide, X, normX);
   
-  Xtraining = X(ndxtrain, :);
-  Xtest = X(ndxtest, :);
+  Xtraining = X(:, ndxtrain);
+  Xtest = X(:, ndxtest);
   
-  data = construct_data(Xtraining, Xtest, [numel(ndxtrain), numel(ndxtest)], operand1, data);
+  data = construct_data(Xtraining, Xtest, [numel(ndxtrain), numel(ndxtest)], operand1, operand2, data);
   % see bottom for construct_data(...)
+  data.gist_mean = gist_mean;
   
 elseif (strcmp(MODE, 'sem-22K-labelme'))
-  % Create semantic 22K labelme dataset:
+  % Create the semantic 22K labelme dataset.
   load('data/LabelMe_gist', 'ndxtrain', 'ndxtest', 'DistLM', 'gist');
-
-  X = gist;
-  clear gist;
   
-  X = X - ones(size(X,1),1)*mean(X);
-  for i = 1:size(X,1)
-    X(i,:) = X(i,:) / norm(X(i,:));
-  end
+  % data-points are stored in columns
+  X = gist';
+  clear gist;
+
+  % center, then normalize data
+  gist_mean = mean(X, 2);
+  X = bsxfun(@minus, X, gist_mean);
+  normX = sqrt(sum(X.^2, 1));
+  X = bsxfun(@rdivide, X, normX);
   if (~exist('operand3'))
     scale = 1;
   else
@@ -64,8 +66,8 @@ elseif (strcmp(MODE, 'sem-22K-labelme'))
   X = X * scale;
   data.scale = scale;
 
-  Xtraining = X(ndxtrain, :);
-  Xtest     = X(ndxtest, :);
+  Xtraining = X(:, ndxtrain);
+  Xtest     = X(:, ndxtest);
   Ntraining = numel(ndxtrain);
   Ntest = numel(ndxtest);
 
@@ -91,92 +93,65 @@ elseif (strcmp(MODE, 'sem-22K-labelme'))
   data.averageNumberNeighbors = nNeighbors;
   data.max_care = operand2; % used for cross-validation in evalLabelme 
 
-elseif (strcmp(MODE, 'sem-full-mnist') || strcmp(MODE, 'sem-full-mnist2'))
-  % Create Semantic full MNIST
-  load('data/mnist-full.mat'); % has rperm_60k
-
-  Ntraining = 60000;
-  Ntest = 10000;
-  WtrueTraining = sparse(false(Ntraining, Ntraining));
-  for i = 0:9
-    WtrueTraining = WtrueTraining + logical(sparse(double(mnist_ltrain == i)) * sparse(double(mnist_ltrain == i))');
-  end
-  WtrueTestTraining = sparse(false(Ntest, Ntraining));
-  for i = 0:9
-    WtrueTestTraining = WtrueTestTraining & logical(sparse(double(mnist_ltest == i)) * sparse(double(mnist_ltrain == i))');
-  end
-  
-  X = double([mnist_train; mnist_test]);
-  if (strcmp(MODE, 'sem-full-mnist')) % no mean-centering and normalization by default
-    X = X / 255;
-  else
-    mean_mnist = mean(mnist_train);
-    X = X - ones(size(X,1),1)*mean_mnist;
-    for i = 1:size(X,1)
-      X(i,:) = X(i,:) / norm(X(i,:));
-    end
-    data.mean_mnist = mean_mnist;
-  end
-
-  data.Ntraining = Ntraining;
-  data.Ntest = Ntest;
-  data.Ltraining = mnist_ltrain(rperm_60k);
-  data.Xtraining = X(rperm_60k(1:60000), :);
-  data.WtrueTraining = WtrueTraining(rperm_60k, rperm_60k);
-  data.Ltest = mnist_ltest;
-  data.Xtest = X(60001:end, :);
-  data.WtrueTestTraining = WtrueTestTraining;
-
 elseif (strcmp(MODE, 'kulis'))
-  % from Brian Kulis's Code
+  % From Brian Kulis's code; Preparing datasets from the BRE paper
   data.MODE = [MODE, ' - ', operand1];
-  X = load(['data/kulis/', operand1, '.mtx']);
+  X = load(['data/kulis/', operand1, '.mtx'])';
 
   averageNumberNeighbors = 50; % number of ground-truth neighbors for each training point (on average)
   Ntraining = 1000;
-  Ntest = min(3000, size(X,1)-1000);
+  Ntest = min(3000, size(X,2)-1000);
 
   % center, then normalize data
-  X = X - ones(size(X,1),1)*mean(X);
-  for i = 1:size(X,1)
-    X(i,:) = X(i,:) / norm(X(i,:));
-  end
+  X = bsxfun(@minus, X, mean(X,2));
+  normX = sqrt(sum(X.^2, 1));
+  X = bsxfun(@rdivide, X, normX);
   
-  rp = randperm(size(X,1));
+  % each time a new permuatation of data is used
+  rp = randperm(size(X,2));
   trIdx = rp(1:Ntraining);
   testIdx = rp(Ntraining+1:Ntraining+Ntest);
-  Xtraining = X(trIdx,:);
-  Xtest = X(testIdx,:);
+  Xtraining = X(:, trIdx);
+  Xtest = X(:, testIdx);
   
-  data = construct_data(Xtraining, Xtest, [Ntraining, Ntest], averageNumberNeighbors, data);
+  data = construct_data(Xtraining, Xtest, [Ntraining, Ntest], averageNumberNeighbors, [], data);
   % see bottom for construct_data(...)
+
 else
   fprintf('The given mode is not recognized.\n');
 end
 
 
-function data = construct_data(Xtraining, Xtest, sizeSets, averageNumberNeighbors, data)
+function data = construct_data(Xtraining, Xtest, sizeSets, avgNNeighbors, proportionNeighbors, data)
 
-  [Ntraining, Ntest] = deal(sizeSets(1), sizeSets(2));
-  DtrueTraining = distMat(Xtraining);
-  fprintf('DtrueTraining is done.\n');
-  Dball = sort(DtrueTraining, 2);
-  Dballmin = mean(Dball(:,averageNumberNeighbors));
+% either avgNNeighbors or proportionNeighbors should be set. The other value should be empty ie., []
+% avgNNeighbors is a number which determines the average number of neighbors for each data point
+% proportionNeighbors is between 0 and 1 which determines the fraction of [similar pairs / total pairs]
 
-  DtrueTestTraining = distMat(Xtest,Xtraining); % size = [Ntest x Ntraining]
-  fprintf('DtrueTestTraining is done.\n');
+[Ntraining, Ntest] = deal(sizeSets(1), sizeSets(2));
+DtrueTraining = distMat(Xtraining);
+fprintf('DtrueTraining is done.\n');
 
-  [sorted ind] = sort(DtrueTraining(:));
-  endTrain = sum(sorted < Dballmin);
+if (~isempty(avgNNeighbors))
+  sortedD = sort(DtrueTraining, 2);
+  threshDist = mean(sortedD(:,avgNNeighbors));
+  data.avgNNeighbors = avgNNeighbors;
+else
+  sortedD = sort(DtrueTraining(:));
+  threshDist = sortedD(ceil(proportionNeighbors * numel(sortedD)));
+  data.proportionNeighbors = proportionNeighbors;
+end
 
-  data.Xtraining = Xtraining;
-  data.Xtest = Xtest;  
-  data.WtrueTraining = DtrueTraining < Dballmin;
-  data.WtrueTestTraining = DtrueTestTraining < Dballmin;
+DtrueTestTraining = distMat(Xtest, Xtraining); % size = [Ntest x Ntraining]
+fprintf('DtrueTestTraining is done.\n');
 
-  data.Ntraining = Ntraining;
-  data.Ntest = Ntest;
-  data.averageNumberNeighbors = averageNumberNeighbors;
-  data.Dballmin = Dballmin;
-  data.Dtraining = DtrueTraining;
-  data.DtestTraining = DtrueTestTraining;
+data.Xtraining = Xtraining;
+data.Xtest = Xtest;  
+data.WtrueTraining = DtrueTraining < threshDist;
+data.WtrueTestTraining = DtrueTestTraining < threshDist;
+
+data.Ntraining = Ntraining;
+data.Ntest = Ntest;
+data.threshDist = threshDist;
+data.Dtraining = DtrueTraining;
+data.DtestTraining = DtrueTestTraining;
