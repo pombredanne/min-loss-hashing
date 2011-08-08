@@ -1,5 +1,11 @@
 function data = create_data(MODE, operand1, operand2, operand3)
 
+if (strcmp(MODE, 'kulis'))
+  fprintf('creating data %s - %s ...', MODE, operand1);
+else
+  fprintf('creating data %s ...', MODE);
+end
+
 data.MODE = MODE;
 
 if (strcmp(MODE, 'uniform'))
@@ -116,10 +122,12 @@ elseif (strcmp(MODE, 'kulis'))
   
   data = construct_data(Xtraining, Xtest, [Ntraining, Ntest], averageNumberNeighbors, [], data);
   % see bottom for construct_data(...)
-
+  
 else
-  fprintf('The given mode is not recognized.\n');
+  error('The given mode is not recognized.\n');
 end
+
+fprintf('done\n');
 
 
 function data = construct_data(Xtraining, Xtest, sizeSets, avgNNeighbors, proportionNeighbors, data)
@@ -130,7 +138,6 @@ function data = construct_data(Xtraining, Xtest, sizeSets, avgNNeighbors, propor
 
 [Ntraining, Ntest] = deal(sizeSets(1), sizeSets(2));
 DtrueTraining = distMat(Xtraining);
-fprintf('DtrueTraining is done.\n');
 
 if (~isempty(avgNNeighbors))
   sortedD = sort(DtrueTraining, 2);
@@ -143,7 +150,6 @@ else
 end
 
 DtrueTestTraining = distMat(Xtest, Xtraining); % size = [Ntest x Ntraining]
-fprintf('DtrueTestTraining is done.\n');
 
 data.Xtraining = Xtraining;
 data.Xtest = Xtest;  
