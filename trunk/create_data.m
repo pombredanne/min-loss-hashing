@@ -99,7 +99,7 @@ elseif (strcmp(MODE, 'sem-22K-labelme'))
   data.max_care = operand2; % used for cross-validation in evalLabelme 
 
 elseif (strcmp(MODE, 'kulis'))
-  fprintf('Creating %s - %s dataset ... ', MODE, operand1);
+  fprintf('Creating %s-%s dataset ... ', MODE, operand1);
   
   % From Brian Kulis's code; Preparing datasets from the BRE paper
   data.MODE = [MODE, ' - ', operand1];

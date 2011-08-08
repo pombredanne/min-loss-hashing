@@ -311,7 +311,11 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
 	  data = create_data('kulis', mode);
 	end
 	% performs PCA dimentionality reduction to retain a 40D subspace
-	data_pca = do_pca(data, 40);
+	if (strcmp(mode, 'nursery') || strcmp(mode, '10d'))
+	  data_pca = data;
+	else
+	  data_pca = do_pca(data, 40);
+	end;
 	
 	for nb = nbs
 	  % assumes rho = 3 / no validation on rho
@@ -375,7 +379,11 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
 	  data = create_data('kulis', mode);
 	end
 	% performs PCA dimentionality reduction to retain a 40D subspace
-	data_pca = do_pca(data, 40);
+	if (strcmp(mode, 'nursery') || strcmp(mode, '10d'))
+	  data_pca = data;
+	else
+	  data_pca = do_pca(data, 40);
+	end;
 	
 	for nb = nbs
 	  % learning rate is fixed at .03 / no validation on eta
@@ -426,7 +434,11 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
 	  data = create_data('kulis', mode);
 	end
 	% performs PCA dimentionality reduction to retain a 40D subspace
-	data_pca = do_pca(data, 40);
+	if (strcmp(mode, 'nursery') || strcmp(mode, '10d'))
+	  data_pca = data;
+	else
+	  data_pca = do_pca(data, 40);
+	end;
 	
 	fprintf('~~~ %d\n', i);
 	for nb = nbs
