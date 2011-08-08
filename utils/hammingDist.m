@@ -16,10 +16,7 @@ function Dh = hammingDist(B1, B2)
 
 % example query
 % Dhamm = hammingDist(B2, B1);
-% this will give the same result than:
-%    Dhamm = distMat(U2>0, U1>0).^2;
-% the size of the distance matrix is:
-%    size(Dhamm) = [Ntest x Ntraining]
+% size(Dhamm) = [Ntest x Ntraining]
 
 % loop-up table:
 bit_in_char = uint16([...

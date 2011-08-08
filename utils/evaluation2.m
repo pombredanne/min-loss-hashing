@@ -1,12 +1,9 @@
-function [score, recall] = evaluation2(Wtrue, Dhamm, maxn, fig, varargin)
+function [score, recall] = evaluation2(Wtrue, Dhamm, maxn)
 
 % Input:
 %    Wtrue = true neighbors [Ntest * Ndataset], can be a full matrix NxN
-%    Dhamm  = estimated distances
+%    Dhamm = estimated distances
 %    maxn = number of distinct distance values to be considered
-%    The next inputs are optional:
-%    fig = figure handle
-%    options = just like in the plot command
 %
 % Output:
 %
@@ -28,15 +25,6 @@ hist = zeros(maxn+1, 1);
 hist(u+1) = countu;
 cumhist = [1; 1+cumsum(hist)];
 
-% for i=1:size(Dhamm,1)
-%   [sD indsD] = sort(Dhamm(i,:)');
-%   [u ind] = unique(sD, 'first');
-%   countu = [ind(2:end); numel(sD)+1] - ind;
-%   hist = zeros(maxn+1, 1);
-%   hist(u+1) = countu;
-%   cumhist = cumhist + [1; 1+cumsum(hist)];
-% end
-
 % find pairs with similar codes
 score = zeros(maxn+1,1);
 retrieved_pairs = 0;
@@ -50,35 +38,4 @@ for n = 1:(maxn+1)
     
     score(n) = retrieved_good_pairs/retrieved_pairs;
     recall(n)= retrieved_good_pairs/total_good_pairs;
-end
-
-% The standard measures for IR are recall and precision. Assuming that:
-%
-%    * RET is the set of all items the system has retrieved for a specific inquiry;
-%    * REL is the set of relevant items for a specific inquiry;
-%    * RETREL is the set of the retrieved relevant items 
-%
-% then precision and recall measures are obtained as follows:
-%
-%    precision = RETREL / RET
-%    recall = RETREL / REL 
-
-if nargout == 0 || nargin > 3
-    if isempty(fig);
-        fig = figure;
-    end
-    figure(fig)
-    subplot(2, 1, 1)
-    plot(0:length(score)-1, score, varargin{:})
-    hold on
-    xlabel('hamming radium')
-    ylabel('percent correct (precision)')
-    title('percentage of good neighbors inside the hamm ball')
-    subplot(2, 1, 2)
-    plot(recall, score, varargin{:})
-    hold on
-    axis([0 1 0 1])
-    xlabel('recall')
-    ylabel('percent correct (precision)')
-    drawnow
 end

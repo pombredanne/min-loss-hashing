@@ -1,11 +1,23 @@
+% Whether to perform experiments on Euclidean 22k LabelMe
+doEuc22K = 1;
+% Whether to perform experiments on 6 small DBs
+doSmallDB = 0;
+
+% Which algorithms to run for finding hash fucntions
+% MLH = Minimal loss hashing with hinge loss
+% BRE = Minimal loss hashing with BRE loss, (our implementation of BRE)
+% LSH = Locality sensitive hashing which preserves cosine similarity
+doMLH = 1;
+doBRE = 0;
+doLSH = 0;
+doPlots = 0; % whether to plot results (MLH, BRE, LSH results should be available)
+
 addpath utils;
 addpath plots;
 
-% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-% %%%%%%%%%%%%%%%%%%%%%%%%% Euclidean 22K LabelMe %%%%%%%%%%%%%%%%%%%%%%%%%%
-% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-if (doEuc22K)
+% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+if (doEuc22K) %%%%%%%%%%%%%%%%%%%%%%%%%% Euclidean 22K LabelMe %%%%%%%%%%%%%%%%%%%%%%%%%%
+% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 data = create_data('euc-22K-labelme', [], 0.01);
 perform_pca = 1			% whether to perform PCA dimensionality reduction
@@ -16,9 +28,7 @@ else
   data2 = data;
 end
 
-% ~~~~~~~~~~~~~~~~~~~~~~~~~ MLH with hinge loss ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-if (doMLH)
+if (doMLH) % ~~~~~~~~~~~~~~~~~~~~~~~~~ MLH with hinge loss ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 clear Wtmp_rho Wtmp_shrink_w Wtmp_lambda W;
 clear pmlh rmlh best_params time_train time_validation;
@@ -127,12 +137,8 @@ for nb = nbs
 end
 end
 
-end
-
-% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-% ~~~~~~~~~~~~~~~~~~~~~~~~~~~ MLH with BRE loss ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-if (doBRE)
+end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+if (doBRE) % ~~~~~~~~~~~~~~~~~~~~~~~~~~~ MLH with BRE loss ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 % NOTE: The following script runs the implementation of Minimal Loss Hashing with BRE Cost
 % Function. The code of B. Kulis and T. Darrell, “Learning to Hash with Binary Reconstructive
@@ -202,12 +208,8 @@ for nb = nbs
 end
 end
 
-end
-
-% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ LSH ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-if (doLSH)
+end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+if (doLSH) % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ LSH ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 % in the paper results are reported for n_trials = 10.
 n_trials = 10;
@@ -230,10 +232,8 @@ else
   save res/lsh_euc-22K-labelme plsh rlsh
 end
 
-end
-
-% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PLOTS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+if (doPlots) % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PLOTS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 load res/mlh_euc-22K-labelme-pca
 load res/bre_euc-22K-labelme-pca
@@ -279,62 +279,21 @@ for nb = nbs;
   % exportfig(fig, ['figs/', 'Euc-22K-prec-recall-', num2str(nb), '.eps'], 'Color', 'rgb');
 end
 
-end
+end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+end % done with Euclidean 22K LabelMe done ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-%%%%%%%%%%%%%
 
-for nn=[1 5 10 50 100 200]
-  
-  clear data 
-  data = create_data('euc-22K-labelme', nn);
-
-  dball_min = data.Dballmin;
-  
-  load res/mlh_euc-22K-labelme-pca
-  load res/lsh_euc-22K-labelme
-  load res/bre_euc-22K-labelme
-  
-  nbs = [16 32 64 128 256];
-  
-  clear pmlh plsh pbre rmlh rlsh rbre;
-  
-  for nb = nbs
-    for i=1:3
-      [nn i nb]
-      
-      % computing precision / recall
-      pbre(i, nb, :) = zeros(1, max(nbs)+1);
-      rbre(i, nb, :) = zeros(1, max(nbs)+1);
-      W = [Wbre{i,nb}.princComp*Wbre{i,nb}.W(:,1:end-1)'; Wbre{i,nb}.W(:,end)']';
-      [pbre(i, nb, 1:nb+1) rbre(i, nb, 1:nb+1)] = eval_linear_hash(W, data);
-      
-      plsh(i, nb, :) = zeros(1, max(nbs)+1);
-      rlsh(i, nb, :) = zeros(1, max(nbs)+1);
-      [plsh(i, nb, 1:nb+1) rlsh(i, nb, 1:nb+1)] = eval_LSH(nb, data);
-      
-      pmlh(i, nb, :) = zeros(1, max(nbs)+1);
-      rmlh(i, nb, :) = zeros(1, max(nbs)+1);
-      W = [Wmlh{i,nb}.princComp*Wmlh{i,nb}.W(:,1:end-1)'; Wmlh{i,nb}.W(:,end)']';
-      [pmlh(i, nb, 1:nb+1) rmlh(i, nb, 1:nb+1)] = eval_linear_hash(W, data);
-    end
-  end
-  
-  save(['res/plots-',num2str(nn)], 'pmlh', 'plsh', 'pbre', 'rmlh', 'rlsh', 'rbre', 'dball_min');
-end
-
-% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Small Datasets %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-if (doSmallDB)
+% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+if (doSmallDB) %%%%%%%%%%%%%%%%%%%%%%%%%%%% 6 Small Datasets %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 % nbs = [10 15 20 25 30 35 40 45 50]; % used for paper
 nbs = [10 20 30 40 50];
     
 ntrials = 5; 			% number of trials for stochastic methods
 
-% ~~~~~~~~~~~~~~~~~~~~~~~~~ MLH with hinge loss ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-if (doMLH)
+if (doMLH) % ~~~~~~~~~~~~~~~~~~~~~~~~~~ MLH with hinge loss ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'} 
   mode = modei{1}
 
@@ -395,11 +354,10 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
     save(['res/mlh_', mode, '.mat'], 'pmlh', 'rmlh', 'mode', 'Wmlh', 'time_train', 'time_validation', 'ntrials');
   end
 end
-end
-% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-% ~~~~~~~~~~~~~~~~~~~~~~~~~~ MLH with BRE loss ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-if (doBRE)
+end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+if (doBRE) % ~~~~~~~~~~~~~~~~~~~~~~~~~~ MLH with BRE loss ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'} 
   mode = modei{1}
 
@@ -450,11 +408,10 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
     save(['res/bre_', mode, '.mat'], 'pbre', 'rbre', 'mode', 'Wbre', 'time_train', 'time_validation', 'ntrials');
   end
 end
-end
-% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ BRE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-if (doLSH)
+end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+if (doLSH) % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ LSH ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
 for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
   mode = modei{1}
 
@@ -481,9 +438,9 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
     
   save(['res/lsh_', mode, '.mat'], 'plsh', 'rlsh', 'mode', 'ntrials');
 end
-end
-% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-% ~~~~~~~~~~~~~~~~~~~~~~~ Plots for Small Datasets ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+if (doPlots) % ~~~~~~~~~~~~~~~~~~~~~~~ Plots for Small Datasets ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 % Precision-Recall curves for different code lengths
 for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'} 
@@ -587,4 +544,5 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
 end
 end
 
-end
+end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+end % done with small DBs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
