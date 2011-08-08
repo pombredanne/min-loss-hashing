@@ -1,9 +1,9 @@
 function data = create_data(MODE, operand1, operand2, operand3)
 
 if (strcmp(MODE, 'kulis'))
-  fprintf('creating data %s - %s ...', MODE, operand1);
+  fprintf('Creating dataset %s - %s ... ', MODE, operand1);
 else
-  fprintf('creating data %s ...', MODE);
+  fprintf('Creating dataset %s ... ', MODE);
 end
 
 data.MODE = MODE;
