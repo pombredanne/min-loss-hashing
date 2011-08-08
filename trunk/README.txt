@@ -12,12 +12,12 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 General Public License for more details.
 
 A copy of the GNU General Public License v3.0 can be found at
-gpl-3.0.txt, see <http://www.gnu.org/licenses/>.
+license.txt, see <http://www.gnu.org/licenses/>.
 
 
 ~~~~~~~~~~~~~ Reference
 
-This is an implementation of the algorithm peresented in the paper
+This is an implementation of the algorithm presented in the paper
 "Minimal Loss Hashing for Compact Binary Codes", Mohammad Norouzi,
 David J Fleet, ICML 2010.
 
@@ -25,7 +25,7 @@ David J Fleet, ICML 2010.
 ~~~~~~~~~~~~~ Mex compilation (optional)
 
 Compile utils/hammingDist2.cpp, which is a faster alternative to
-hammingDist.m. The mex implementation uses GCC builtin popcount
+hammingDist.m. The mex implementation uses GCC built-in popcount
 function. Please make sure to change eval_linear_hash.m accordingly.
 
 ~~~~~~~~~~~~~ Usage
@@ -38,11 +38,11 @@ data/ folder contains dataset files - should be downloaded separately
 from:
 
 - data/kulis/*.mtx files for creating the small databases (MNIST,
-LabelMe, Peekaboom, Photo-Tourism, Nuresery) could be downloaded from
+LabelMe, Peekaboom, Photo-Tourism, Nursery) could be downloaded from
 http://www.eecs.berkeley.edu/~kulis/data/. should be stored under
 data/kulis/
 
-- data/LabelMe_gist.mat is the 22K labelme database availabe at
+- data/LabelMe_gist.mat is the 22K labelme database available at
 http://cs.nyu.edu/~fergus/research/tfw_cvpr08_code.zip
 
 RUN.m: is the starting point.  It shows how the code can be run for
