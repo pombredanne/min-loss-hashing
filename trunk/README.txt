@@ -1,5 +1,5 @@
-Minimal loss hashing code for learning similarity preserving binary
-hash function. Copyright (C) 2011 Mohammad Norouzi and David Fleet.
+Minimal loss hashing for learning similarity preserving binary hash
+functions. Copyright (C) 2011 Mohammad Norouzi and David Fleet.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -34,8 +34,7 @@ see RUN.m
 
 ~~~~~~~~~~~~~ List of files
 
-data/ folder contains dataset files - should be downloaded separately
-from:
+data/ folder contains dataset files - should be downloaded separately:
 
 - data/kulis/*.mtx files for creating the small databases (MNIST,
 LabelMe, Peekaboom, Photo-Tourism, Nursery) could be downloaded from

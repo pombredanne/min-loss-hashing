@@ -1,15 +1,15 @@
-function [avg_ap best_W Wall best_params] = learnMLH(data, param, verbose, initW)
+function [avg_ap final_W Wall final_params] = learnMLH(data, param, verbose, initW)
 
-nb = param.nb;							% number of bits i.e, binary code length
-initeta = param.eta;					% initial learning rate
-shrink_eta = param.shrink_eta;			% whether shrink learning rate, as training proceeds
-size_batches = param.size_batches;		% mini-batch size
-maxiter = param.maxiter;				% number of gradient update iterations (each iteration
+nb = param.nb;				% number of bits i.e, binary code length
+initeta = param.eta;			% initial learning rate
+shrink_eta = param.shrink_eta;		% whether shrink learning rate, as training proceeds
+size_batches = param.size_batches;	% mini-batch size
+maxiter = param.maxiter;		% number of gradient update iterations (each iteration
                                         % consists of 10^5 pairs)
-zerobias = param.zerobias;				% whether offset terms are learned for hash hyper-planes
+zerobias = param.zerobias;		% whether offset terms are learned for hash hyper-planes
                                         % or they all go through the origin
-momentum = param.momentum;				% momentum term (between 0 and 1) for gradient update
-shrink_w = param.shrink_w;				% weight decay parameter
+momentum = param.momentum;		% momentum term (between 0 and 1) for gradient update
+shrink_w = param.shrink_w;		% weight decay parameter
 
 loss_func = param.loss;
 % loss_function is a structure itself. The code supports loss_func.type = 'hinge' or 'bre'.  For
@@ -119,7 +119,7 @@ for t=1:maxt
     x1 = Xtraining(:, x1nd(:));
     x2 = Xtraining(:, x2nd(:));
     
-	l = full(data.WtrueTraining(cases)');
+    l = full(data.WtrueTraining(cases)');
     
     x1 = [x1; ones(1,ncases)];
     Wx1 = W*x1;
@@ -134,7 +134,7 @@ for t=1:maxt
     y2plus  = Wx2;			% y2 bits all on
     y2minus = -Wx2;			% y2 bits all off
 
-    [valeq indeq]   = max([cat(3, y1plus+y2plus, y1minus+y2minus)],[],3);
+    [valeq indeq] = max([cat(3, y1plus+y2plus, y1minus+y2minus)],[],3);
     % best score for bits in y1 and y2 being the same
     [valneq indneq] = max([cat(3, y1plus+y2minus, y1minus+y2plus)],[],3);
     % best score for bits in y1 and y2 being different
@@ -143,8 +143,8 @@ for t=1:maxt
         
     if (strcmp(loss_func.type, 'hinge'))
       % creating the hinge-like loss for the positive and negative pairs
-       loss = (1/sqrt(lambda)) * [kron(l == 1, ([zeros(1, rho) 1:(nb-rho+1)] / (nb))')] ...
-			  + sqrt(lambda)   * [kron(l == 0, ([(rho+1):-1:1 zeros(1, nb-rho)] / (nb))')];
+       loss = (1/sqrt(lambda)) * [kron(l == 1, ([zeros(1, rho) 1:(nb-rho+1)] / (nb))')] + sqrt(lambda) ...
+	      * [kron(l == 0, ([(rho+1):-1:1 zeros(1, nb-rho)] / (nb))')];
     elseif (strcmp(loss_func.type, 'bre'))
       % creating the quadratic loss function of the BRE method
       % it requires the Dtraining matrix
@@ -183,7 +183,7 @@ for t=1:maxt
       bits_useless   = (min(r, 1-r)) < .03;
       n_bits_useless = sum(bits_useless);
       
-	  hdis = nb-(nb/2+(sum(y1.*y2)/2));
+      hdis = nb-(nb/2+(sum(y1.*y2)/2));
       TP = TP + sum((hdis <= rho) & (l == 1));
       TN = TN + sum((hdis >  rho) & (l == 0));
       FP = FP + sum((hdis <= rho) & (l == 0));
@@ -249,33 +249,26 @@ if (param.doval_after)
   avg_ap  = avg_ap  / param.doval_after;
   avg_err = avg_err / param.doval_after;
   if (verbose)
-    fprintf('Mean AP over last %d steps: %.3f                         \n', param.doval_after, avg_ap);
-    if (strcmp(data.MODE, 'sem-full-mnist')) % mnist
-      fprintf('Mean error over last %d steps: %.3f                         \n', param.doval_after, avg_err);
-    end
+    fprintf('Mean AP over final %d steps: %.3f                         \n', param.doval_after, avg_ap);
   end
 end
 
 param.ap  = avg_ap;
 param.err = avg_err;
-best_W = W;
-best_params = param;
+final_W = W;
+final_params = param;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [ap err] = eval(t, eta, data, W, rho, verbose)
 
-err = NaN;
-if (strcmp(data.MODE, 'sem-full-mnist')) %mnist
-  err = eval_mnist(W, data);
-  fprintf('~~~ err: %.3f ', err);
-end
+err = NaN; % err can be used to return any other type of error that is concerned.
 
 [p1 r1] = eval_linear_hash(W, data);
 p1(isnan(p1)) = 1;
 
 ap = 0;
-if (strcmp(data.MODE, 'sem-22k-labelme'))
+if (strcmp(data.MODE, 'sem-22K-labelme'))
   % semantic labelme
   [ap pcode] = eval_labelme(W, data);
   if (verbose)
