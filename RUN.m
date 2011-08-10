@@ -1,16 +1,19 @@
-% Whether to perform experiments on Euclidean 22k LabelMe
+% doEuc22K: whether to perform experiments on Euclidean 22k LabelMe
+% doSmallDB: whether to perform experiments on 6 small DBs
 doEuc22K = 1;
-% Whether to perform experiments on 6 small DBs
 doSmallDB = 0;
 
 % Which algorithms to run for finding hash fucntions
-% MLH = Minimal loss hashing with hinge loss
-% BRE = Minimal loss hashing with BRE loss, (our implementation of BRE)
-% LSH = Locality sensitive hashing which preserves cosine similarity
+% doMLH: perform minimal loss hashing with hinge loss
+% doBRE: perform minimal loss hashing with BRE loss, (our implementation of BRE)
+% doLSH: perform locality sensitive hashing (LSH) which preserves cosine similarity
 doMLH = 1;
 doBRE = 0;
 doLSH = 0;
-doPlots = 0; % whether to plot results (MLH, BRE, LSH results should be available)
+
+% doPlots: whether to plot results (assuming MLH, BRE, LSH results are available)
+doPlots = 0;
+
 
 addpath utils;
 addpath plots;
@@ -37,7 +40,7 @@ clear pmlh rmlh best_params time_train time_validation;
 % to see the details during validation, set val_verbose to 15 (debug info every 15th iteration)
 val_verbose = 0;
 
-% in the paper results are reported for n_trials = 10.
+% in the paper n_trials = 10 used
 n_trials = 3;
 % different code lengths to try
 nbs = [16 32 64 128 256];
@@ -62,7 +65,7 @@ for nb = nbs
   best_params(i,nb).eta = .03;
   best_params(i,nb).shrink_w = 1e-4;
   best_params(i,nb).lambda = 5;			% penalty on negative pairs will be lambda times bigger
-                                        % (we emphasize on precision)
+						% (we emphasize on precision)
 					
   % number of learning iterations for validation
   val_iter = 75;
@@ -79,7 +82,7 @@ for nb = nbs
   rho_set = rho + [-2 -1 0 +1 +2] * step;
   rho_set(rho_set < 1) = [];
   Wtmp_rho = MLH(data2, {'hinge', rho_set, best_params(i,nb).lambda}, nb, [best_params(i,nb).eta], ...
-				 .9, 100, 'train', val_iter, val_zerobias, 0, 4, val_verbose, best_params(i,nb).shrink_w, 0);
+		 .9, 100, 'train', val_iter, val_zerobias, 0, 4, val_verbose, best_params(i,nb).shrink_w, 0);
   best_ap = -1;
   for j = 1:numel(Wtmp_rho)
     if (Wtmp_rho(j).ap > best_ap)
@@ -96,8 +99,8 @@ for nb = nbs
   fprintf('Validation for weight decay parameter\n');
   shrink_w_set = [.01 1e-3 1e-4 1e-5 1e-6];
   Wtmp_shrink_w = MLH(data2, {'hinge', best_params(i,nb).rho, best_params(i,nb).lambda}, nb, ...
-					  [best_params(i,nb).eta], .9, 100, 'train', val_iter, val_zerobias, 0, 4, ...
-					  val_verbose, shrink_w_set, 0);
+		      [best_params(i,nb).eta], .9, 100, 'train', val_iter, val_zerobias, 0, 4, ...
+		      val_verbose, shrink_w_set, 0);
   best_ap = -1;
   for j = 1:numel(Wtmp_shrink_w)
     if (Wtmp_shrink_w(j).ap > best_ap)
@@ -193,7 +196,7 @@ for nb = nbs
   t1 = tic;
   % blow 500 iterations used, using more iterations provides slightly better results
   Wbre{i, nb} = MLH(data2, {'bre'}, nb, [best_params(i,nb).eta], .9, [best_params(i,nb).size_batches], ...
-					'trainval', 500, 1, 5, 1, 50, [best_params(i,nb).shrink_w], 1);
+		    'trainval', 500, 1, 5, 1, 50, [best_params(i,nb).shrink_w], 1);
   time_train(i,nb) = toc(t1);
   
   % computing precision / recall
@@ -212,7 +215,7 @@ end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 if (doLSH) % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ LSH ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 % in the paper results are reported for n_trials = 10.
-n_trials = 10;
+n_trials = 3;
 % different code lengths to try
 nbs = [16 32 64 128 256];
 
@@ -272,10 +275,10 @@ for nb = nbs;
   cap.xlabel = ['Recall'];
   cap.ylabel = ['Precision'];
   fig = make_err_plot({recs_mlh,            recs_bre,           recs_lsh,           }, ... % recs_sh,           }, ...
-					  {mean(precs_mlh,1),   mean(precs_bre,1),  mean(precs_lsh,1),  }, ... % mean(precs_sh),    }, ...
-					  {std(precs_mlh,0,1),  std(precs_bre,0,1), std(precs_lsh,0,1), }, ... % std(precs_sh,0,1), }, ...
-					  {'MLH',               'BRE',              'LSH',              }, ... % 'SH',              }, ...	
-					  cap, 'tr', 1);
+		      {mean(precs_mlh,1),   mean(precs_bre,1),  mean(precs_lsh,1),  }, ... % mean(precs_sh),    }, ...
+		      {std(precs_mlh,0,1),  std(precs_bre,0,1), std(precs_lsh,0,1), }, ... % std(precs_sh,0,1), }, ...
+		      {'MLH',               'BRE',              'LSH',              }, ... % 'SH',              }, ...	
+		      cap, 'tr', 1);
   % exportfig(fig, ['figs/', 'Euc-22K-prec-recall-', num2str(nb), '.eps'], 'Color', 'rgb');
 end
 
@@ -290,7 +293,8 @@ if (doSmallDB) %%%%%%%%%%%%%%%%%%%%%%%%%%%% 6 Small Datasets %%%%%%%%%%%%%%%%%%%
 % nbs = [10 15 20 25 30 35 40 45 50]; % used for paper
 nbs = [10 20 30 40 50];
     
-ntrials = 5; 			% number of trials for stochastic methods
+n_trials = 3;  % number of trials for stochastic methods
+	       % in the paper n_trials = 10 used
 
 if (doMLH) % ~~~~~~~~~~~~~~~~~~~~~~~~~~ MLH with hinge loss ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -301,52 +305,52 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
   train_verbose = 25;
   
   clear pmlh rmlh Wmlh;
-  for i=1:ntrials
-	fprintf('[%d / %d]\n', i, ntrials);
-	% raw data are available at http://www.eecs.berkeley.edu/~kulis/data/
-	% re-create the datasets structure with new train/test subsets
-	if (strcmp(mode, '10d'))
-	  data = create_data('uniform', 10);
-	else
-	  data = create_data('kulis', mode);
-	end
-	% performs PCA dimentionality reduction to retain a 40D subspace
-	if (strcmp(mode, 'nursery') || strcmp(mode, '10d'))
-	  data_pca = data;
-	else
-	  data_pca = do_pca(data, 40);
-	end;
-	
-	for nb = nbs
-	  % assumes rho = 3 / no validation on rho
-	  % Note that fixing rho is not the correct way of learning binary codes. Only use fixed rho if
+  for i=1:n_trials
+    fprintf('[%d / %d]\n', i, n_trials);
+    % raw data are available at http://www.eecs.berkeley.edu/~kulis/data/
+    % re-create the datasets structure with new train/test subsets
+    if (strcmp(mode, '10d'))
+      data = create_data('uniform', 10);
+    else
+      data = create_data('kulis', mode);
+    end
+    % performs PCA dimentionality reduction to retain a 40D subspace
+    if (strcmp(mode, 'nursery') || strcmp(mode, '10d'))
+      data_pca = data;
+    else
+      data_pca = do_pca(data, 40);
+    end;
+    
+    for nb = nbs
+      % assumes rho = 3 / no validation on rho
+      % Note that fixing rho is not the correct way of learning binary codes. Only use fixed rho if
       % all what you care about is the peformance quality at this specific rho
-	  rho = 3;
-	  % learning rate is fixed at .03 / no validation on eta
-	  eta = .03;
-	  
-	  fprintf('[nb = %d]\n', nb);
-	  t0 = tic;
-	  % validation on lambda
-	  lambda_set = [1 2 4 8 16 32];
-	  Wtmp = MLH(data_pca, {'hinge', rho, lambda_set}, nb, [eta], .9, 100, 'train', 20, 1, 0, 4, ...
-				 val_verbose, 1e-4, 0);
+      rho = 3;
+      % learning rate is fixed at .03 / no validation on eta
+      eta = .03;
+      
+      fprintf('[nb = %d]\n', nb);
+      t0 = tic;
+      % validation on lambda
+      lambda_set = [1 2 4 8 16 32];
+      Wtmp = MLH(data_pca, {'hinge', rho, lambda_set}, nb, [eta], .9, 100, 'train', 20, 1, 0, 4, ...
+		 val_verbose, 1e-4, 0);
       [m ind] = max([Wtmp.ap]); % best setting according to evaluation
-	  lambda = Wtmp(ind).params.loss.lambda
-	  
-	  % validation for the weight decay parameter
-	  shrink_w_set = [.1 .01 1e-3 1e-4 1e-5 1e-6];
-	  % shrink_w_set = [.1 .03 .01 .003 .001 .0001];
-	  Wtmp = MLH(data_pca, {'hinge', rho, lambda}, nb, [eta], .9, 100, 'train', 20, 1, 0, 4, ...
-				 val_verbose, shrink_w_set, 0);
+      lambda = Wtmp(ind).params.loss.lambda
+      
+      % validation for the weight decay parameter
+      shrink_w_set = [.1 .01 1e-3 1e-4 1e-5 1e-6];
+      % shrink_w_set = [.1 .03 .01 .003 .001 .0001];
+      Wtmp = MLH(data_pca, {'hinge', rho, lambda}, nb, [eta], .9, 100, 'train', 20, 1, 0, 4, ...
+		 val_verbose, shrink_w_set, 0);
       [m ind] = max([Wtmp.ap]); % best setting according to validation
-	  shrink_w = Wtmp(ind).params.shrink_w;
-	  time_validation(i, nb) = toc(t0);
-	
-	  % training on the train+val set
+      shrink_w = Wtmp(ind).params.shrink_w;
+      time_validation(i, nb) = toc(t0);
+      
+      % training on the train+val set
       t1 = tic;
       Wmlh{i, nb} = MLH(data_pca, {'hinge', rho, lambda}, nb, [eta], .9, 100, 'trainval', 50, 1, ...
-						0, 1, train_verbose, shrink_w, 1);
+			0, 1, train_verbose, shrink_w, 1);
       time_train(i, nb) = toc(t1);
     end
 	
@@ -355,7 +359,7 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
       rmlh(i, nb, :) = zeros(1, 51);
       [pmlh(i, nb, 1:nb+1) rmlh(i, nb, 1:nb+1)] = eval_linear_hash(Wmlh{i, nb}.W, data_pca);
     end
-    save(['res/mlh_', mode, '.mat'], 'pmlh', 'rmlh', 'mode', 'Wmlh', 'time_train', 'time_validation', 'ntrials');
+    save(['res/mlh_', mode, '.mat'], 'pmlh', 'rmlh', 'mode', 'Wmlh', 'time_train', 'time_validation', 'n_trials');
   end
 end
 
@@ -369,51 +373,51 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
   train_verbose = 25;
   
   clear pbre rbre Wbre;
-  for i=1:ntrials
-	fprintf('[%d / %d]\n', i, ntrials);
-	% raw data are available at http://www.eecs.berkeley.edu/~kulis/data/
-	% re-create the datasets structure with new train/test subsets
-	if (strcmp(mode, '10d'))
-	  data = create_data('uniform', 10);
-	else
-	  data = create_data('kulis', mode);
-	end
-	% performs PCA dimentionality reduction to retain a 40D subspace
-	if (strcmp(mode, 'nursery') || strcmp(mode, '10d'))
-	  data_pca = data;
-	else
-	  data_pca = do_pca(data, 40);
-	end;
-	
-	for nb = nbs
-	  % learning rate is fixed at .03 / no validation on eta
-	  eta = .03;
-	  
-	  fprintf('[nb = %d]\n', nb);
-	  t0 = tic;
-	  
-	  % validation for the weight decay parameter
-	  shrink_w_set = [.1 .01 1e-3 1e-4 1e-5 1e-6];
-	  % shrink_w_set = [.1 .03 .01 .003 .001 .0001];
-	  Wtmp = MLH(data_pca, {'bre'}, nb, [eta], .9, 100, 'train', 20, 1, 0, 4, val_verbose, ...
-				 shrink_w_set, 0);
+  for i=1:n_trials
+    fprintf('[%d / %d]\n', i, n_trials);
+    % raw data are available at http://www.eecs.berkeley.edu/~kulis/data/
+    % re-create the datasets structure with new train/test subsets
+    if (strcmp(mode, '10d'))
+      data = create_data('uniform', 10);
+    else
+      data = create_data('kulis', mode);
+    end
+    % performs PCA dimentionality reduction to retain a 40D subspace
+    if (strcmp(mode, 'nursery') || strcmp(mode, '10d'))
+      data_pca = data;
+    else
+      data_pca = do_pca(data, 40);
+    end;
+    
+    for nb = nbs
+      % learning rate is fixed at .03 / no validation on eta
+      eta = .03;
+      
+      fprintf('[nb = %d]\n', nb);
+      t0 = tic;
+      
+      % validation for the weight decay parameter
+      shrink_w_set = [.1 .01 1e-3 1e-4 1e-5 1e-6];
+      % shrink_w_set = [.1 .03 .01 .003 .001 .0001];
+      Wtmp = MLH(data_pca, {'bre'}, nb, [eta], .9, 100, 'train', 20, 1, 0, 4, val_verbose, ...
+		 shrink_w_set, 0);
       [m ind] = max([Wtmp.ap]); % best setting according to validation
-	  shrink_w = Wtmp(ind).params.shrink_w;
-	  time_validation(i, nb) = toc(t0);
-	
-	  % training on the train+val set
+      shrink_w = Wtmp(ind).params.shrink_w;
+      time_validation(i, nb) = toc(t0);
+      
+      % training on the train+val set
       t1 = tic;
       Wbre{i, nb} = MLH(data_pca, {'bre'}, nb, [eta], .9, 100, 'trainval', 50, 1, 0, 1, train_verbose, ...
-						shrink_w, 1);
+			shrink_w, 1);
       time_train(i, nb) = toc(t1);
     end
-	
+    
     for nb = nbs
       pbre(i, nb, :) = zeros(1, 51);
       rbre(i, nb, :) = zeros(1, 51);
       [pbre(i, nb, 1:nb+1) rbre(i, nb, 1:nb+1)] = eval_linear_hash(Wbre{i, nb}.W, data_pca);
     end
-    save(['res/bre_', mode, '.mat'], 'pbre', 'rbre', 'mode', 'Wbre', 'time_train', 'time_validation', 'ntrials');
+    save(['res/bre_', mode, '.mat'], 'pbre', 'rbre', 'mode', 'Wbre', 'time_train', 'time_validation', 'n_trials');
   end
 end
 
@@ -422,33 +426,33 @@ if (doLSH) % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ LSH ~~~~~~~~~~~~~~~~~~~~~~~~~~~
   
 for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
   mode = modei{1}
-
+  
   clear pmlh rmlh W;
-  for i=1:ntrials
-	fprintf('[%d / %d]\n', i, ntrials);
-	% raw data are available at http://www.eecs.berkeley.edu/~kulis/data/
-	% re-create the datasets structure with new train/test subsets
-	if (strcmp(mode, '10d'))
-	  data = create_data('uniform', 10);
-	else
-	  data = create_data('kulis', mode);
-	end
-	% performs PCA dimentionality reduction to retain a 40D subspace
-	if (strcmp(mode, 'nursery') || strcmp(mode, '10d'))
-	  data_pca = data;
-	else
-	  data_pca = do_pca(data, 40);
-	end;
-	
-	fprintf('~~~ %d\n', i);
-	for nb = nbs
-	  plsh(i, nb, :) = zeros(1, max(nbs)+1);
-	  rlsh(i, nb, :) = zeros(1, max(nbs)+1);
-	  [plsh(i, nb, 1:nb+1) rlsh(i, nb, 1:nb+1)] = eval_LSH(nb, data_pca);
-	end
-  end
+  for i=1:n_trials
+    fprintf('[%d / %d]\n', i, n_trials);
+    % raw data are available at http://www.eecs.berkeley.edu/~kulis/data/
+    % re-create the datasets structure with new train/test subsets
+    if (strcmp(mode, '10d'))
+      data = create_data('uniform', 10);
+    else
+      data = create_data('kulis', mode);
+    end
+    % performs PCA dimentionality reduction to retain a 40D subspace
+    if (strcmp(mode, 'nursery') || strcmp(mode, '10d'))
+      data_pca = data;
+    else
+      data_pca = do_pca(data, 40);
+    end;
     
-  save(['res/lsh_', mode, '.mat'], 'plsh', 'rlsh', 'mode', 'ntrials');
+    fprintf('~~~ %d\n', i);
+    for nb = nbs
+      plsh(i, nb, :) = zeros(1, max(nbs)+1);
+      rlsh(i, nb, :) = zeros(1, max(nbs)+1);
+      [plsh(i, nb, 1:nb+1) rlsh(i, nb, 1:nb+1)] = eval_LSH(nb, data_pca);
+    end
+  end
+  
+  save(['res/lsh_', mode, '.mat'], 'plsh', 'rlsh', 'mode', 'n_trials');
 end
 
 end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -461,7 +465,7 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
   load(['res/lsh_', mode, '.mat']);
   load(['res/bre_', mode, '.mat'])
   % load(['res/SH_', mode, '.mat']);
-
+  
   for nb = [30, 50];
     clear precs_mlh precs_lsh precs_bre precs_lsh precs_sh precs_sikh;
     
@@ -469,17 +473,17 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
     for i=1:size(pmlh, 1)
       precs_mlh(i,:) = compute_prec_at_recall(squeeze(rmlh(i,nb,1:nb+1)), squeeze(pmlh(i,nb,1:nb+1)), recs_mlh);
     end
-
+    
     recs_bre = [max(rbre(:,nb,1)):.02:min(rbre(:,nb,nb+1)), min(rbre(:,nb,nb+1))];
     for i=1:size(pbre, 1)
       precs_bre(i,:) = compute_prec_at_recall(squeeze(rbre(i,nb,1:nb+1)), squeeze(pbre(i,nb,1:nb+1)), recs_bre);
     end
-
+    
     recs_lsh = [max(rlsh(:,nb,1)):.02:min(rlsh(:,nb,nb+1)), min(rlsh(:,nb,nb+1))];
     for i=1:size(plsh, 1)
       precs_lsh(i,:) = compute_prec_at_recall(squeeze(rlsh(i,nb,1:nb+1)), squeeze(plsh(i,nb,1:nb+1)), recs_lsh);
     end
-
+    
     % recs_sh = [max(rsh(:,nb,1)):.02:min(rsh(:,nb,nb+1)), min(rsh(:,nb,nb+1))];
     % for i=1:size(psh, 1)
     %   precs_sh(i,:) = compute_prec_at_recall(squeeze(rsh(i,nb,1:nb+1)), squeeze(psh(i,nb,1:nb+1)), recs_sh);
@@ -492,7 +496,7 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
 		        {mean(precs_mlh,1),   mean(precs_bre,1),  mean(precs_lsh,1),  }, ... % mean(precs_sh),    }, ...
 		        {std(precs_mlh,0,1),  std(precs_bre,0,1), std(precs_lsh,0,1), }, ... % std(precs_sh,0,1), }, ...
 		        {'MLH',               'BRE',              'LSH',              }, ... % 'SH',              }, ...	
-		cap, 'tr', 1);
+			cap, 'tr', 1);
     % exportfig(fig, ['figs/', mode, '-prec-recall-', num2str(nb), '.eps'], 'Color', 'rgb');
   end
 end
@@ -500,14 +504,14 @@ end
 % Precision (or Recall) at a certain Hamming distance R as a function of code length
 for R = [3];
 for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
-
+  
   mode = modei{1}
-
+  
   load(['res/mlh_', mode, '.mat']);
   load(['res/lsh_', mode, '.mat']);
   load(['res/bre_', mode, '.mat'])
   % load(['res/SH_', mode, '.mat']);
-
+  
   pmlh_std = squeeze(std(pmlh,0,1));
   pmlh_mean = squeeze(mean(pmlh,1));
   plsh_std = squeeze(std(plsh,0,1));
@@ -516,7 +520,7 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
   pbre_mean = squeeze(mean(pbre,1));
   % psh_std = squeeze(std(psh,0,1));
   % psh_mean = squeeze(mean(psh,1));
-
+  
   rmlh_std = squeeze(std(rmlh,0,1));
   rmlh_mean = squeeze(mean(rmlh,1));
   rlsh_std = squeeze(std(rlsh,0,1));
@@ -525,10 +529,10 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
   rbre_mean = squeeze(mean(rbre,1));
   % rsh_std = squeeze(std(rsh,0,1));
   % rsh_mean = squeeze(mean(rsh,1));
-
+  
   %  nbs_for_plot = [10 15 20 25 30 35 40 45 50];
   nbs_for_plot = [10 20 30 40 50];
-
+  
   % how many models for each method
   % [size(pmlh,1) size(plsh,1) size(pbre,1)]
   
@@ -539,10 +543,10 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
   e = [pmlh_std(:,R+1)  pbre_std(:,R+1)  plsh_std(:,R+1) ]; % psh_std(:,R+1) ];
   n_lines = size(p,2);
   fig = make_err_plot(repmat(nbs_for_plot', [1 n_lines]), p(nbs_for_plot, :), e(nbs_for_plot, :), ...
-					  {'MLH', 'BRE', 'LSH'}, ...% 'SH'}, ...
+		      {'MLH', 'BRE', 'LSH'}, ...% 'SH'}, ...
 					  cap, 'br', 1);
   %  exportfig(fig, ['figs/',mode,'-prec-',num2str(R),'.eps'], 'Color', 'rgb');
-
+  
   cap.tit = [mode, ' (recall)'];
   cap.xlabel = ['Number of bits'];
   cap.ylabel = ['Recall for Hamm. dist. <= ', num2str(R)];
@@ -550,8 +554,8 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
   er = [rmlh_std(:,R+1)  rbre_std(:,R+1)  rlsh_std(:,R+1) ]; % rsh_std(:,R+1) ];
   n_lines = size(r,2);
   fig = make_err_plot(repmat(nbs_for_plot', [1 n_lines]), r(nbs_for_plot, :), er(nbs_for_plot, :), ...
-					  {'MLH', 'BRE', 'LSH'}, ... % 'SH'}, ...
-					  cap, 'tr', 1);
+		      {'MLH', 'BRE', 'LSH'}, ... % 'SH'}, ...
+		      cap, 'tr', 1);
   %  exportfig(fig, ['figs/',mode,'-recall-',num2str(R),'.eps'], 'Color', 'rgb');
 end
 end
