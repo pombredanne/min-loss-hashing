@@ -84,15 +84,16 @@ elseif (strcmp(MODE, 'sem-22K-labelme'))
 
   nNeighbors = operand1; % number of ground-truth neighbors for each training point (on average)
   Dball = sort(DtrueTraining2, 2); 
-  Dballmin = mean(Dball(:, nNeighbors));
+  threshDist = mean(Dball(:, nNeighbors));
 
   data.MODE = MODE;
   data.Xtraining = Xtraining;
   data.Xtest = Xtest;
-  data.WtrueTestTraining = DtrueTestTraining2 < Dballmin;
+  data.WtrueTraining = DtrueTraining2 < threshDist;
+  data.WtrueTestTraining = DtrueTestTraining2 < threshDist;
   data.Ntraining = Ntraining;
   data.Ntest = Ntest;
-  data.Dballmin = Dballmin; 
+  data.threshDist = threshDist; 
   data.Dtraining = DtrueTraining;
   data.DtestTraining = DtrueTestTraining;
   data.averageNumberNeighbors = nNeighbors;
