@@ -15,7 +15,7 @@ for n = 1:length(ndxtest)
   ndx = ndxtest(n);
   
   % compute your distance
-  D_code = hammD2(code(:,ndx),code(:,ndxtrain));
+  D_code = hammingDist(code(:,ndx),code(:,ndxtrain));
   [foo, j_code] = sort(D_code, 'ascend'); % I assume that smaller distance means closer
   j_code = ndxtrain(j_code);
   
