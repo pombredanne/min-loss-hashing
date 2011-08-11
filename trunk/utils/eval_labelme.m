@@ -7,16 +7,17 @@ ndxtrain = 1:data.Ntraining;
 ndxtest = data.Ntraining+1:data.Ntraining+data.Ntest;
 code(:,ndxtrain) = B1;
 code(:,ndxtest)  = B2;
-code = compactbit(code')';
+code = compactbit(code);
 code = uint8(code);
 
 P_code = zeros(numel(ndxtrain), numel(ndxtest));
+% compute Hamming distance values
+D_code = hammingDist(code(:,ndxtest),code(:,ndxtrain));
+
 for n = 1:length(ndxtest)
   ndx = ndxtest(n);
   
-  % compute your distance
-  D_code = hammingDist(code(:,ndx),code(:,ndxtrain));
-  [foo, j_code] = sort(D_code, 'ascend'); % I assume that smaller distance means closer
+  [foo, j_code] = sort(D_code(n, :), 'ascend'); % I assume that smaller distance means closer
   j_code = ndxtrain(j_code);
   
   % get groundtruth sorting
