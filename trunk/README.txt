@@ -1,32 +1,21 @@
 Minimal loss hashing for learning similarity preserving binary hash
-functions. Copyright (C) 2011 Mohammad Norouzi and David Fleet.
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or (at
-your option) any later version.
-
-This program is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-General Public License for more details.
-
-A copy of the GNU General Public License v3.0 can be found at
-license.txt, see <http://www.gnu.org/licenses/>.
-
+functions. Copyright (c) 2011, Mohammad Norouzi <mohammad.n@gmail.com>
+and David Fleet <fleet@cs.toronto.edu>. This is a free software; for
+license information please refer to license.txt file.
 
 ~~~~~~~~~~~~~ Reference
 
 This is an implementation of the algorithm presented in the paper
-"Minimal Loss Hashing for Compact Binary Codes", Mohammad Norouzi,
-David J Fleet, ICML 2010.
+"Minimal Loss Hashing for Compact Binary Codes, Mohammad Norouzi,
+David J Fleet, ICML 2010", with slight modifications.
 
 
 ~~~~~~~~~~~~~ Mex compilation (optional)
 
 Compile utils/hammingDist2.cpp, which is a faster alternative to
 hammingDist.m. The mex implementation uses GCC built-in popcount
-function. Please make sure to change eval_linear_hash.m accordingly.
+function. Please make changes to eval_linear_hash.m and eval_labelme.m
+to use hammingDist2.
 
 ~~~~~~~~~~~~~ Usage
 
@@ -34,21 +23,22 @@ see RUN.m
 
 ~~~~~~~~~~~~~ List of files
 
-data/ folder contains dataset files - should be downloaded separately:
+data/ folder will contain dataset files which you download separately:
 
-- data/kulis/*.mtx files for creating the small databases (MNIST,
-LabelMe, Peekaboom, Photo-Tourism, Nursery) could be downloaded from
-http://www.eecs.berkeley.edu/~kulis/data/. should be stored under
-data/kulis/
+- data/LabelMe_gist.mat is the 22K LabelMe database available at
+http://cs.nyu.edu/~fergus/research/tfw_cvpr08_code.zip courtesy of Rob
+Fergus
 
-- data/LabelMe_gist.mat is the 22K labelme database available at
-http://cs.nyu.edu/~fergus/research/tfw_cvpr08_code.zip
+- data/kulis/*.mtx files for 5 small datasets (MNIST, LabelMe,
+Peekaboom, Photo-Tourism, Nursery) can be downloaded from
+http://www.eecs.berkeley.edu/~kulis/data/ courtesy of Brian
+Kulis. (store them under data/kulis/)
 
 RUN.m: is the starting point.  It shows how the code can be run for
-Euclidean 22K LabelMe and small datasets. It also includes the codes
-for creating the figures.
+Euclidean/Semantic 22K LabelMe and small datasets. It also includes
+the codes for creating the figures.
 
-learnMLH.m: is the main file for learning hash functions. Performs
+learnMLH.m: is the main file for learning hash functions. It performs
 stochastic gradient descent to learn hash parameters.
 
 MLH.m: is the function that calls learnMLH useful for validation over
@@ -68,3 +58,5 @@ used in the paper.
 
 res/ folder will store the result files. Pre-trained parameter
 matrices and binary codes for semantic 22K LabelMe are already there.
+
+... (incomplete)
