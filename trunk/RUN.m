@@ -1,9 +1,9 @@
 % doEuc22K: whether to perform experiments on Euclidean 22K LabelMe
 % doSem22K: whether to perform experiments on Semantic 22K LabelMe
 % doSmallDB: whether to perform experiments on 6 small DBs
-doEuc22K = 0;
+doEuc22K = 1;
 doSem22K = 0;
-doSmallDB = 1;
+doSmallDB = 0;
 
 % Which algorithms to run for finding hash fucntions
 % doMLH: perform minimal loss hashing with hinge loss
