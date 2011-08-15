@@ -1,5 +1,5 @@
 % Random projection method by "Moses Charikar" which preserves cosine similarity
-% reference: "Similarity estimation techniques from rounding algorithms", "Charikar, M.", STOC 2002
+% reference: Similarity estimation techniques from rounding algorithms, M. Charikar, STOC 2002
 
 function [p0 r0] = eval_LSH(nbits, data, S);
 

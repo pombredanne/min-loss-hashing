@@ -1,14 +1,8 @@
-function [p1 r1] = eval_linear_hash(W, data, val)
+function [p1 r1] = eval_linear_hash(W, data)
 
 Ntest = data.Ntest;
 Xtest = data.Xtest;
 WtrueTestTraining = data.WtrueTestTraining;
-
-if (isfield(data, 'trainset'))
-  if (strcmp(data.trainset, 'trainval'))
-    fprintf('real test ');
-  end
-end
 
 Ntraining = data.Ntraining;
 Xtraining = data.Xtraining;
