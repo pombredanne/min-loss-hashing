@@ -1,24 +1,24 @@
 function Dh = hammingDist(B1, B2)
 %
-% Compute hamming distance between two sets of samples (B1, B2)
+% Compute hamming distance between two sets of binary codes (B1, B2)
 %
 % Dh = hammingDist(B1, B2);
 %
-% Input
-%    B1, B2: compact bit vectors. Each datapoint is one column.
+% Input:
+%    B1, B2: compact bit vectors. Each binary code is one column comprising of uint8 numbers.
 %    size(B1) = [nwords, ndatapoints1]
 %    size(B2) = [nwords, ndatapoints2]
 %    It is faster if ndatapoints1 < ndatapoints2
 % 
-% Output
+% Output:
 %    Dh = hamming distance. 
 %    size(Dh) = [ndatapoints1, ndatapoints2]
 
-% example query
-% Dhamm = hammingDist(B2, B1);
-% size(Dhamm) = [Ntest x Ntraining]
+% example query:
+%    Dhamm = hammingDist(B2, B1);
+%    size(Dhamm) = [Ntest x Ntraining]
 
-% loop-up table:
+% look-up table:
 bit_in_char = uint16([...
     0 1 1 2 1 2 2 3 1 2 2 3 2 3 3 4 1 2 2 3 2 3 ...
     3 4 2 3 3 4 3 4 4 5 1 2 2 3 2 3 3 4 2 3 3 4 ...

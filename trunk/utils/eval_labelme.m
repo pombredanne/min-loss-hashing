@@ -13,6 +13,7 @@ code = uint8(code);
 P_code = zeros(numel(ndxtrain), numel(ndxtest));
 % compute Hamming distance values
 D_code = hammingDist(code(:,ndxtest),code(:,ndxtrain));
+% D_code = hammingDist2(code(:,ndxtest),code(:,ndxtrain));		% a faster version of hammingDist
 
 for n = 1:length(ndxtest)
   ndx = ndxtest(n);
