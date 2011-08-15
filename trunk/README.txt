@@ -19,35 +19,22 @@ to use hammingDist2.
 
 ~~~~~~~~~~~~~ Usage
 
-see RUN.m
-
-~~~~~~~~~~~~~ Notes
-
-This implementation is slightly different from the algorithm presented
-in the MLH ICML'11 paper. Main modifications include 1) an L2
-regularizer on W matrix is used instead of fixing the norm of W. Thus
-instead of tuning epsilon parameter which gets multiplied by the loss
-function, we tune a regularizer parameter and do not change loss. 2)
-For balancing precision and recall, instead of formulating a parameter
-lambda inside the hinge loss, we re-define lambda as the ratio of
-positive and negative pairs to be sampled during training. We usually
-use lambda=.5 meaning equal sampling of positive and negative
-pairs. For one of the experiments we set lambda=0 meaning the original
-distribution of positive and negative pairs.
-
+download dataset files (see below)
+RUN.m includes code snippets for different experiments
 
 ~~~~~~~~~~~~~ List of files
 
-data/ folder will contain dataset files which you download separately:
+data/ folder will contain dataset files which you should download
+separately:
 
-- data/LabelMe_gist.mat is the 22K LabelMe database available at
-http://cs.nyu.edu/~fergus/research/tfw_cvpr08_code.zip courtesy of Rob
-Fergus
+- data/LabelMe_gist.mat is the 22K LabelMe dataset available from
+http://cs.nyu.edu/~fergus/research/tfw_cvpr08_code.zip, courtesy of
+Rob Fergus.
 
 - data/kulis/*.mtx files for 5 small datasets (MNIST, LabelMe,
 Peekaboom, Photo-Tourism, Nursery) can be downloaded from
-http://www.eecs.berkeley.edu/~kulis/data/ courtesy of Brian
-Kulis. (store them under data/kulis/)
+http://www.eecs.berkeley.edu/~kulis/data/, courtesy of Brian
+Kulis. (store the files under data/kulis/ sub-directory)
 
 RUN.m: is the starting point.  It shows how the code can be run for
 Euclidean/Semantic 22K LabelMe and small datasets. It also includes
@@ -75,3 +62,17 @@ res/ folder will store the result files. Pre-trained parameter
 matrices and binary codes for semantic 22K LabelMe are already there.
 
 ... (incomplete)
+
+~~~~~~~~~~~~~ Notes
+
+This implementation is slightly different from the algorithm presented
+in the MLH ICML'11 paper. Main modifications include 1) an L2
+regularizer on W matrix is used instead of fixing the norm of W. Thus
+instead of tuning epsilon parameter which gets multiplied by the loss
+function, we tune a regularizer parameter and do not change loss. 2)
+For balancing precision and recall, instead of formulating a parameter
+lambda inside the hinge loss, we re-define lambda as the ratio of
+positive and negative pairs to be sampled during training. We usually
+use lambda=.5 meaning equal sampling of positive and negative
+pairs. For one of the experiments we set lambda=0 meaning the original
+distribution of positive and negative pairs.

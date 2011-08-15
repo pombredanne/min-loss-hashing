@@ -4,7 +4,9 @@ Fleet <fleet@cs.toronto.edu>
 Permission to use, copy, modify, and/or distribute this software for
 any purpose with or without fee is hereby granted, provided that the
 above copyright notice and this permission notice appear in all
-copies.
+copies. Any technical work using this code should cite "Minimal Loss
+Hashing for Compact Binary Codes, Mohammad Norouzi, David J Fleet,
+ICML 2010".
 
 THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
 WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
