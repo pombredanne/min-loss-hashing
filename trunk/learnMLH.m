@@ -1,4 +1,21 @@
-function [avg_ap final_W Wall final_params] = learnMLH(data, param, verbose, initW)
+% Copyright (c) 2011, Mohammad Norouzi and David Fleet
+
+function [mean_ap final_W Wall final_params] = learnMLH(data, param, verbose, initW)
+
+% The main file for learning hash functions. It performs stochastic gradient descent to learn the
+% hash parameters.
+%
+% Input:
+%    data: data structure for training the model already split into training and validation sets.
+%    param: a parameter structure which should include the required parameters.
+%    verbose: either 0 or 1, writing debug information or not
+%    initW: initial weight matrix
+%
+% Output:
+%    mean_ap: mean average precision over nval_after validation stages after training
+%    final_W: final weight matrix
+%    Wall: a set of weight matrices stored during training at intermediate validation stages
+%    final_params: parameters with some additional components
 
 nb = param.nb;				% number of bits i.e, binary code length
 initeta = param.eta;			% initial learning rate
@@ -6,7 +23,7 @@ shrink_eta = param.shrink_eta;		% whether shrink learning rate, as training proc
 size_batches = param.size_batches;	% mini-batch size
 maxiter = param.maxiter;		% number of gradient update iterations (each iteration
                                         % consists of 10^5 pairs)
-zerobias = param.zerobias;		% whether offset terms are learned for hash hyper-planes
+zerobias = param.zerobias;		% whether offset terms are learned for hashing hyper-planes
                                         % or they all go through the origin
 momentum = param.momentum;		% momentum term (between 0 and 1) for gradient update
 shrink_w = param.shrink_w;		% weight decay parameter
@@ -23,7 +40,6 @@ end
 Ntraining = data.Ntraining;
 NtrainingSqr = Ntraining^2;
 Xtraining = data.Xtraining;
-indPosPairs = find(data.WtrueTraining);
 if strcmp(loss_func.type, 'hinge')
   lambda = loss_func.lambda;
   rho = loss_func.rho;
@@ -31,6 +47,9 @@ else
   % rho is used to report precision and recall in eval(...) function below
   rho = ceil(2^(log(nb) / log(2) - 4) * 2);
 end
+
+indPos = find(data.WtrueTraining == 1);
+nPos = numel(indPos);
 
 if (verbose)
   fprintf('---------------------------\n');
@@ -56,7 +75,7 @@ if (verbose)
   end
   fprintf('size mini-batches = %d\n', size_batches);
   fprintf('momentum = ''%.2f''\n', momentum);
-  fprintf('validation during / after training = %d / %d times\n', param.doval_during, param.doval_after);
+  fprintf('validation during / after training = %d / %d times\n', param.nval_during, param.nval_after);
   % more that one validation after training is suggested and averaging to account for validation noise
   fprintf('---------------------------\n');
 end
@@ -76,7 +95,7 @@ end
 Wall{1} = W;
 bound = 0;
 
-if (verbose && param.doval_during)
+if (verbose && param.nval_during)
   eval(-1, initeta, data, W, rho, verbose);
 end
 if (verbose)
@@ -84,7 +103,7 @@ if (verbose)
 end
 
 % initialization
-avg_ap  = 0;
+mean_ap  = 0;
 avg_err = 0;
 ncases = size_batches;
 nnz = 0;
@@ -97,7 +116,9 @@ Winc = zeros(size(W));
 ntraining = 10^5; 			% total number of pairs to be considered in each iteration
 ncases = size_batches;
 maxb = floor(ntraining / ncases);	% number of mini-batches
-maxt = maxiter+param.doval_after-1;	% number of epochs
+maxt = maxiter+param.nval_after-1;	% number of epochs
+
+cases = zeros(ncases,1);
 
 for t=1:maxt
   if (shrink_eta)			% learning rate update
@@ -112,14 +133,30 @@ for t=1:maxt
   bound = 0;
 
   for b=1:maxb
-    % random selection of pairs
-    cases = ceil(rand(ncases, 1)*NtrainingSqr);
+    if strcmp(loss_func.type, 'hinge')
+      ncases2 = min(round(ncases * max(lambda - (nPos / NtrainingSqr), 0)), ncases); 
+      % make the fraction of positive pairs to be at least lambda
+      ncases1 = ncases - ncases2;
+    
+      % random selection of pairs
+      cases(1:ncases1) = ceil(rand(ncases1, 1)*NtrainingSqr);
+      % selection of positive pairs
+      cases(ncases1+1:end) = indPos(ceil(rand(ncases2, 1)*nPos));
+    else
+      cases = ceil(rand(ncases, 1)*NtrainingSqr);
+    end
+    
+    % cases = ceil(rand(ncases, 1)*NtrainingSqr);
     [x1nd x2nd] = ind2sub([Ntraining Ntraining], cases);
     
     x1 = Xtraining(:, x1nd(:));
     x2 = Xtraining(:, x2nd(:));
     
     l = full(data.WtrueTraining(cases)');
+    
+    % if (b == 1)
+    %   display(l);
+    % end
     
     x1 = [x1; ones(1,ncases)];
     Wx1 = W*x1;
@@ -143,8 +180,10 @@ for t=1:maxt
         
     if (strcmp(loss_func.type, 'hinge'))
       % creating the hinge-like loss for the positive and negative pairs
-       loss = (1/sqrt(lambda)) * [kron(l == 1, ([zeros(1, rho) 1:(nb-rho+1)] / (nb))')] + sqrt(lambda) ...
-	      * [kron(l == 0, ([(rho+1):-1:1 zeros(1, nb-rho)] / (nb))')];
+       loss = [kron(l == 1, ([zeros(1, rho) 1:(nb-rho+1)] / (nb-rho+1))')] + ...
+	      [kron(l == 0, ([(rho+1):-1:1 zeros(1, nb-rho)] / (rho+1))')];
+       % loss = (1/sqrt(lambda)) * [kron(l == 1, ([zeros(1, rho) 1:(nb-rho+1)] / (nb-rho+1))')] + ...
+       % 	      sqrt(lambda) * [kron(l == 0, ([(rho+1):-1:1 zeros(1, nb-rho)] / (rho+1))')];
     elseif (strcmp(loss_func.type, 'bre'))
       % creating the quadratic loss function of the BRE method
       % it requires the Dtraining matrix
@@ -212,15 +251,15 @@ for t=1:maxt
   
   fprintf('(%d/%.3f) ', t, eta);
 
-  if (~verbose || (~param.doval_during && ~param.doval_after) || (verbose && mod(t, verbose) ~= 0))
+  if (~verbose || (~param.nval_during && ~param.nval_after) || (verbose && mod(t, verbose) ~= 0))
     fprintf('\r');
   end
 
-  if (verbose && t < maxiter && mod(t, verbose) == 0)
-    fprintf([' bound:%.3f----nnz:%.1f  FN[%.0f%% %d]  FP[%.0f%% %d]  TP[%.0f%% %d]  TN[%.0f%% %d]' ...
-    	     '----prec:%.3f  rec:%.3f  norm W=%.2f | nsm:%d (%.3f)'], bound/maxb, nnz/maxb, 100*nnz_fn/FN, FN, 100*nnz_fp/FP, ...
-    	    FP, 100*nnz_tp/TP, TP, 100*nnz_tn/TN, TN, 100*TP/(TP+FP), TP/(TP+FN), sqrt(sum(W(:).^2)), ...
-    	    n_bits_useless, min(min(r, 1 - r)));
+  if (verbose && t <= maxiter && mod(t, verbose) == 0)
+    fprintf([' bound:%.3f----nnz:%.1f  FN[%.0f%% %d]  FP[%.0f%% %d] TP[%.0f%% %d] TN[%.0f%% %d]' ...
+	     '----prec:%.3f  rec:%.3f  norm W=%.2f | nsm:%d (%.3f)'], bound/maxb, nnz/maxb, ...
+	    100*nnz_fn/FN, FN, 100*nnz_fp/FP, FP, 100*nnz_tp/TP, TP, 100*nnz_tn/TN, TN, TP/(TP+FP), ...
+	    TP/(TP+FN), sqrt(sum(W(:).^2)), n_bits_useless, min(min(r, 1 - r)));
     fprintf('\n');
     
     nnz_fp = 0; nnz_fn = 0; nnz_tp = 0; nnz_tn = 0;
@@ -232,28 +271,28 @@ for t=1:maxt
   end
   nnz = 0;
   
-  if(param.doval_during && t < maxiter)
-    if (mod(t, floor(maxiter/(param.doval_during))) == 0)
+  if(param.nval_during && t < maxiter)
+    if (mod(t, floor(maxiter/(param.nval_during))) == 0)
       eval(t, eta, data, W, rho, verbose);
     end
   end
   
-  if(param.doval_after && t >= maxiter)
+  if(param.nval_after && t >= maxiter)
     [ap err] = eval(t, eta, data, W, rho, verbose);
     avg_err = avg_err + err;
-    avg_ap  = avg_ap  + ap;
+    mean_ap  = mean_ap  + ap;
   end
 end
 
-if (param.doval_after)
-  avg_ap  = avg_ap  / param.doval_after;
-  avg_err = avg_err / param.doval_after;
+if (param.nval_after)
+  mean_ap  = mean_ap  / param.nval_after;
+  avg_err = avg_err / param.nval_after;
   if (verbose)
-    fprintf('Mean AP over final %d steps: %.3f                         \n', param.doval_after, avg_ap);
+    fprintf('Mean AP over final %d step(s): %.3f                         \n', param.nval_after, mean_ap);
   end
 end
 
-param.ap  = avg_ap;
+param.ap  = mean_ap;
 param.err = avg_err;
 final_W = W;
 final_params = param;

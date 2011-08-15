@@ -1,7 +1,9 @@
-% doEuc22K: whether to perform experiments on Euclidean 22k LabelMe
+% doEuc22K: whether to perform experiments on Euclidean 22K LabelMe
+% doSem22K: whether to perform experiments on Semantic 22K LabelMe
 % doSmallDB: whether to perform experiments on 6 small DBs
-doEuc22K = 1;
-doSmallDB = 0;
+doEuc22K = 0;
+doSem22K = 0;
+doSmallDB = 1;
 
 % Which algorithms to run for finding hash fucntions
 % doMLH: perform minimal loss hashing with hinge loss
@@ -55,17 +57,16 @@ for nb = nbs
   % A heuristic for initial selection of rho
   data3 = create_training(data2, 'train', 1);
   [p0 r0] = eval_LSH(nb, data3);
-  rho = sum(r0 < .10);			% rho with 10% recall (nothing deep; just a heuristic)
+  rho = sum(r0 < .2);			% rho with 20% recall (nothing deep; just a heuristic)
   fprintf('automatic estimation of rho suggested rho = %d.\n', rho);
   clear data3;
     
   % best_params is a data structure that stores the most reasonable parameter setting
   % initial setting of parameters
   best_params(i,nb).size_batches = 100;
-  best_params(i,nb).eta = .03;
+  best_params(i,nb).eta = .1;
   best_params(i,nb).shrink_w = 1e-4;
-  best_params(i,nb).lambda = 5;			% penalty on negative pairs will be lambda times bigger
-						% (we emphasize on precision)
+  best_params(i,nb).lambda = .5;
 					
   % number of learning iterations for validation
   val_iter = 75;
@@ -74,15 +75,15 @@ for nb = nbs
 
   % validation for rho in hinge loss
   % rho might get large. If retrieval at a certain hamming distance at test time is desired, rho
-  % should be set manually. See alternative validation on lambda (instead of rho) for small databases.
-  fprintf('Validation for rho in hinge loss\n');    
-  step = round(nb / 64);
+  % should be set manually. See alternative validation on lambda (instead of rho) for small databases.  
+  fprintf('validation for rho in hinge loss\n');    
+  step = round(nb / 32);
   step(step < 1) = 1;
     
   rho_set = rho + [-2 -1 0 +1 +2] * step;
   rho_set(rho_set < 1) = [];
   Wtmp_rho = MLH(data2, {'hinge', rho_set, best_params(i,nb).lambda}, nb, [best_params(i,nb).eta], ...
-		 .9, 100, 'train', val_iter, val_zerobias, 0, 4, val_verbose, best_params(i,nb).shrink_w, 0);
+		 .9, 100, 'train', val_iter, val_zerobias, 0, 5, val_verbose, best_params(i,nb).shrink_w, 0);
   best_ap = -1;
   for j = 1:numel(Wtmp_rho)
     if (Wtmp_rho(j).ap > best_ap)
@@ -96,10 +97,10 @@ for nb = nbs
   fprintf('Best rho (%d bits) = %d\n', nb, best_params(i,nb).rho);
     
   % validation for weight decay parameter
-  fprintf('Validation for weight decay parameter\n');
-  shrink_w_set = [.01 1e-3 1e-4 1e-5 1e-6];
+  fprintf('validation for weight decay parameter\n');
+  shrink_w_set = [.01 1e-3 1e-4 1e-5];
   Wtmp_shrink_w = MLH(data2, {'hinge', best_params(i,nb).rho, best_params(i,nb).lambda}, nb, ...
-		      [best_params(i,nb).eta], .9, 100, 'train', val_iter, val_zerobias, 0, 4, ...
+		      [best_params(i,nb).eta], .9, 100, 'train', val_iter, val_zerobias, 0, 5, ...
 		      val_verbose, shrink_w_set, 0);
   best_ap = -1;
   for j = 1:numel(Wtmp_shrink_w)
@@ -118,7 +119,7 @@ for nb = nbs
 
   % ---- training on the train+val set -----
   t1 = tic;
-  % blow 500 learning iterations are used, using more provides slightly better results
+  % blow 500 learning iterations are used, using more might provide slightly better results
   % in the paper we used 2000
   train_iter = 500;
   train_zerobias = 1;
@@ -169,11 +170,11 @@ for nb = nbs
 
   % default setting of parameters
   best_params(i,nb).size_batches = 100;
-  best_params(i,nb).eta = .03;
+  best_params(i,nb).eta = .1;
     
   % validation for weight decay parameter
-  fprintf('Validation for weight decay parameter\n');
-  shrink_w_set = [.01 1e-3 1e-4 1e-5 1e-6];
+  fprintf('validation for weight decay parameter\n');
+  shrink_w_set = [.01 1e-3 1e-4 1e-5];
   Wtmp_shrink_w = MLH(data2, {'bre'}, nb, [best_params(i,nb).eta], .9, 100, 'train', 75, 1, 0, ...
 		      4, val_verbose, shrink_w_set, 0);
   best_ap = -1;
@@ -286,27 +287,151 @@ end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 end % done with Euclidean 22K LabelMe done ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+if (doSem22K) %%%%%%%%%%%%%%%%%%%%%%%%%%% Semantic 22K LabelMe %%%%%%%%%%%%%%%%%%%%%%%%%%
+% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+data = create_data('sem-22K-labelme', 50, 1000);
+perform_pca = 0 % whether to perform PCA dimensionality reduction
+
+if (perform_pca)
+  data2 = do_pca(data, 40);
+else
+  data2 = data;
+end
+if (doMLH) % ~~~~~~~~~~~~~~~~~~~~~~~~~ MLH with hinge loss ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+clear Wtmp_rho Wtmp_shrink_w Wtmp_lambda W;
+clear pmlh rmlh best_params time_train time_validation;
+
+% verbose flag for validation is set to 0 (off)
+% to see the details during validation, set val_verbose to 15 (debug info every 15th iteration)
+val_verbose = 0;
+
+% in the paper n_trials = 10 used
+n_trials = 1;
+% different code lengths to try
+nbs = [16 32 64 128 256];
+
+for i = 1:n_trials
+for nb = nbs
+  nb
+
+  % ----- validation -----
+  t0 = tic;
+
+  % A heuristic for initial selection of rho
+  data3 = create_training(data2, 'train', 1);
+  [p0 r0] = eval_LSH(nb, data3);
+  rho = sum(r0 < .2);% rho with 20% recall (nothing deep; just a heuristic)
+  fprintf('automatic estimation of rho suggested rho = %d.\n', rho);
+  clear data3;
+
+  % best_params is a data structure that stores the most reasonable parameter setting
+  % initial setting of parameters
+  best_params(i,nb).size_batches = 100;
+  best_params(i,nb).eta = .1;
+  best_params(i,nb).shrink_w = 1e-4;
+  best_params(i,nb).lambda = .5;
+
+  % number of learning iterations for validation
+  val_iter = 75;
+  % whether the hyper-plane offsets are zero during validation
+  val_zerobias = 1;
+
+  % validation for rho in hinge loss
+  % rho might get large. If retrieval at a certain hamming distance at test time is desired, rho
+  % should be set manually. See alternative validation on lambda (instead of rho) for small databases.
+  fprintf('validation for rho in hinge loss\n');
+  step = round(nb / 32);
+  step(step < 1) = 1;
+
+  rho_set = rho + [-2 -1 0 +1 +2] * step;
+  rho_set(rho_set < 1) = [];
+  Wtmp_rho = MLH(data2, {'hinge', rho_set, best_params(i,nb).lambda}, nb, [best_params(i,nb).eta], ...
+		 .9, 100, 'train', val_iter, val_zerobias, 0, 5, val_verbose, best_params(i,nb).shrink_w, 0);
+  best_ap = -1;
+  for j = 1:numel(Wtmp_rho)
+    if (Wtmp_rho(j).ap > best_ap)
+      best_ap = Wtmp_rho(j).ap;
+      best_params(i,nb).rho = Wtmp_rho(j).params.loss.rho;
+    end
+    if (val_verbose)
+      fprintf('%.3f %d\n', Wtmp_rho(j).ap, Wtmp_rho(j).params.loss.rho);
+    end
+  end
+  fprintf('Best rho (%d bits) = %d\n', nb, best_params(i,nb).rho);
+
+  % validation for weight decay parameter
+  fprintf('validation for weight decay parameter\n');
+  shrink_w_set = [.01 1e-3 1e-4 1e-5];
+  Wtmp_shrink_w = MLH(data2, {'hinge', best_params(i,nb).rho, best_params(i,nb).lambda}, nb, ...
+		      [best_params(i,nb).eta], .9, 100, 'train', val_iter, val_zerobias, 0, 5, ...
+		      val_verbose, shrink_w_set, 0);
+  best_ap = -1;
+  for j = 1:numel(Wtmp_shrink_w)
+    if (Wtmp_shrink_w(j).ap > best_ap)
+      best_ap = Wtmp_shrink_w(j).ap;
+      best_params(i,nb).shrink_w = Wtmp_shrink_w(j).params.shrink_w;
+    end
+    if (val_verbose)
+      fprintf('%.3f %.6f\n', Wtmp_shrink_w(j).ap, Wtmp_shrink_w(j).params.shrink_w);
+    end
+  end
+  fprintf('Best weight decay (%d bits) = %.6f\n', nb, best_params(i,nb).shrink_w);
+
+  time_validation(i,nb) = toc(t0);
+  best_params(i,nb)
+
+  % ---- training on the train+val set -----
+  t1 = tic;
+  % blow 500 learning iterations are used, using more provides slightly better results
+  % in the paper we used 2000
+  train_iter = 500;
+  train_zerobias = 1;
+  Wmlh{i, nb} = MLH(data2, {'hinge', best_params(i,nb).rho, best_params(i,nb).lambda}, nb, ...
+		    [best_params(i,nb).eta], .9, [best_params(i,nb).size_batches], 'trainval', train_iter, train_zerobias, ...
+		    5, 1, 50, [best_params(i,nb).shrink_w], 1);
+  time_train(i,nb) = toc(t1);
+
+  % computing precision / recall
+  pmlh(i, nb, :) = zeros(1, max(nbs)+1);
+  rmlh(i, nb, :) = zeros(1, max(nbs)+1);
+  [pmlh(i, nb, 1:nb+1) rmlh(i, nb, 1:nb+1)] = eval_linear_hash(Wmlh{i, nb}.W, data2);
+
+  if (perform_pca)
+    save res/mlh_sem-22K-labelme-pca pmlh rmlh best_params Wmlh time_train time_validation;
+  else
+    save res/mlh_sem-22K-labelme pmlh rmlh best_params Wmlh time_train time_validation;
+  end
+end
+end
+
+end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+end % done with Semantic 22K LabelMe done ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 if (doSmallDB) %%%%%%%%%%%%%%%%%%%%%%%%%%%% 6 Small Datasets %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-% nbs = [10 15 20 25 30 35 40 45 50]; % used for paper
-nbs = [10 20 30 40 50];
+nbs = [10 15 20 25 30 35 40 45 50];
     
 n_trials = 3;  % number of trials for stochastic methods
 	       % in the paper n_trials = 10 used
 
 if (doMLH) % ~~~~~~~~~~~~~~~~~~~~~~~~~~ MLH with hinge loss ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+  
 for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'} 
-  mode = modei{1}
-
   val_verbose = 0;
   train_verbose = 25;
   
   clear pmlh rmlh Wmlh;
+
   for i=1:n_trials
-    fprintf('[%d / %d]\n', i, n_trials);
+    mode = modei{1};
+    fprintf('%s [%d / %d]\n', mode, i, n_trials);
+    
     % raw data are available at http://www.eecs.berkeley.edu/~kulis/data/
     % re-create the datasets structure with new train/test subsets
     if (strcmp(mode, '10d'))
@@ -324,24 +449,26 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
     for nb = nbs
       % assumes rho = 3 / no validation on rho
       % Note that fixing rho is not the correct way of learning binary codes. Only use fixed rho if
-      % all what you care about is the peformance quality at this specific rho
+      % all what you care about is the peformance quality at a specific rho
       rho = 3;
-      % learning rate is fixed at .03 / no validation on eta
-      eta = .03;
+      % learning rate is fixed at .1 / no validation on eta
+      eta = .1;
       
       fprintf('[nb = %d]\n', nb);
       t0 = tic;
-      % validation on lambda
-      lambda_set = [1 2 4 8 16 32];
-      Wtmp = MLH(data_pca, {'hinge', rho, lambda_set}, nb, [eta], .9, 100, 'train', 20, 1, 0, 4, ...
-		 val_verbose, 1e-4, 0);
-      [m ind] = max([Wtmp.ap]); % best setting according to evaluation
-      lambda = Wtmp(ind).params.loss.lambda
+      % % validation on lambda
+      % lambda_set = [0 .2 .5];
+      % Wtmp = MLH(data_pca, {'hinge', rho, lambda_set}, nb, [eta], .9, 100, 'train', 20, 1, 0, 5, ...
+      % 		 val_verbose, 1e-4, 0);
+      % [m ind] = max([Wtmp.ap]); % best setting according to evaluation
+      % lambda = Wtmp(ind).params.loss.lambda;
+      
+      lambda = 0; % Because we fix rho at 3, we need to decrease lambda to act in higher precision
+                  % regime. lambda being zero means that we don't resample positive pairs.
       
       % validation for the weight decay parameter
-      shrink_w_set = [.1 .01 1e-3 1e-4 1e-5 1e-6];
-      % shrink_w_set = [.1 .03 .01 .003 .001 .0001];
-      Wtmp = MLH(data_pca, {'hinge', rho, lambda}, nb, [eta], .9, 100, 'train', 20, 1, 0, 4, ...
+      shrink_w_set = [.01 1e-3 1e-4 1e-5];
+      Wtmp = MLH(data_pca, {'hinge', rho, lambda}, nb, [eta], .9, 100, 'train', 20, 1, 0, 5, ...
 		 val_verbose, shrink_w_set, 0);
       [m ind] = max([Wtmp.ap]); % best setting according to validation
       shrink_w = Wtmp(ind).params.shrink_w;
@@ -353,7 +480,7 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
 			0, 1, train_verbose, shrink_w, 1);
       time_train(i, nb) = toc(t1);
     end
-	
+    
     for nb = nbs
       pmlh(i, nb, :) = zeros(1, 51);
       rmlh(i, nb, :) = zeros(1, 51);
@@ -390,16 +517,15 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
     end;
     
     for nb = nbs
-      % learning rate is fixed at .03 / no validation on eta
-      eta = .03;
+      % learning rate is fixed at .1 / no validation on eta
+      eta = .1;
       
       fprintf('[nb = %d]\n', nb);
       t0 = tic;
       
       % validation for the weight decay parameter
-      shrink_w_set = [.1 .01 1e-3 1e-4 1e-5 1e-6];
-      % shrink_w_set = [.1 .03 .01 .003 .001 .0001];
-      Wtmp = MLH(data_pca, {'bre'}, nb, [eta], .9, 100, 'train', 20, 1, 0, 4, val_verbose, ...
+      shrink_w_set = [.01 1e-3 1e-4 1e-5];
+      Wtmp = MLH(data_pca, {'bre'}, nb, [eta], .9, 100, 'train', 20, 1, 0, 5, val_verbose, ...
 		 shrink_w_set, 0);
       [m ind] = max([Wtmp.ap]); % best setting according to validation
       shrink_w = Wtmp(ind).params.shrink_w;
@@ -530,8 +656,7 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
   % rsh_std = squeeze(std(rsh,0,1));
   % rsh_mean = squeeze(mean(rsh,1));
   
-  %  nbs_for_plot = [10 15 20 25 30 35 40 45 50];
-  nbs_for_plot = [10 20 30 40 50];
+  nbs_for_plot = [10 15 20 25 30 35 40 45 50];
   
   % how many models for each method
   % [size(pmlh,1) size(plsh,1) size(pbre,1)]

@@ -21,6 +21,21 @@ to use hammingDist2.
 
 see RUN.m
 
+~~~~~~~~~~~~~ Notes
+
+This implementation is slightly different from the algorithm presented
+in the MLH ICML'11 paper. Main modifications include 1) an L2
+regularizer on W matrix is used instead of fixing the norm of W. Thus
+instead of tuning epsilon parameter which gets multiplied by the loss
+function, we tune a regularizer parameter and do not change loss. 2)
+For balancing precision and recall, instead of formulating a parameter
+lambda inside the hinge loss, we re-define lambda as the ratio of
+positive and negative pairs to be sampled during training. We usually
+use lambda=.5 meaning equal sampling of positive and negative
+pairs. For one of the experiments we set lambda=0 meaning the original
+distribution of positive and negative pairs.
+
+
 ~~~~~~~~~~~~~ List of files
 
 data/ folder will contain dataset files which you download separately:
@@ -38,11 +53,11 @@ RUN.m: is the starting point.  It shows how the code can be run for
 Euclidean/Semantic 22K LabelMe and small datasets. It also includes
 the codes for creating the figures.
 
-learnMLH.m: is the main file for learning hash functions. It performs
-stochastic gradient descent to learn hash parameters.
+learnMLH.m: the main file for learning hash functions. It performs
+stochastic gradient descent to learn the hash parameters.
 
-MLH.m: is the function that calls learnMLH useful for validation over
-a number of parameters.
+MLH.m: performs validation on sets of parameters by calling
+appropriate instances of learnMLH function.
 
 create_data: a function that creates dataset structures from different
 sources of data based on its input parameters.

@@ -78,26 +78,25 @@ elseif (strcmp(MODE, 'sem-22K-labelme'))
 
   DtrueTraining = -DistLM(ndxtrain, ndxtrain);
   DtrueTestTraining = -DistLM(ndxtest, ndxtrain);
-  DistLM = (DistLM + DistLM') / 2; % making the distance symmetric
-  DtrueTraining2 = -DistLM(ndxtrain, ndxtrain);
-  DtrueTestTraining2 = -DistLM(ndxtest, ndxtrain);
 
+  sorted = sort(DtrueTraining, 2);
+  D = sparse(bsxfun(@lt, DtrueTraining, sorted(:,operand1+1)));
+  sorted2 = sort(DtrueTestTraining, 2);
+  D2 = sparse(bsxfun(@lt, DtrueTestTraining, sorted2(:,operand1+1)));
+  
   nNeighbors = operand1; % number of ground-truth neighbors for each training point (on average)
-  Dball = sort(DtrueTraining2, 2); 
-  threshDist = mean(Dball(:, nNeighbors));
 
   data.MODE = MODE;
   data.Xtraining = Xtraining;
   data.Xtest = Xtest;
-  data.WtrueTraining = DtrueTraining2 < threshDist;
-  data.WtrueTestTraining = DtrueTestTraining2 < threshDist;
+  data.WtrueTraining = D | D';
+  data.WtrueTestTraining = D2;
   data.Ntraining = Ntraining;
   data.Ntest = Ntest;
-  data.threshDist = threshDist; 
   data.Dtraining = DtrueTraining;
   data.DtestTraining = DtrueTestTraining;
   data.averageNumberNeighbors = nNeighbors;
-  data.max_care = operand2; % used for cross-validation in evalLabelme 
+  data.max_care = operand2; % used for cross-validation in eval_labelme function
 
 elseif (strcmp(MODE, 'kulis'))
   fprintf('Creating %s-%s dataset ... ', MODE, operand1);
