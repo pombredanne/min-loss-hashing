@@ -19,9 +19,9 @@ to use hammingDist2.
 
 You should download the dataset files separately:
 
-- LabelMe_gist.mat is the 22K LabelMe dataset available at
-http://cs.nyu.edu/~fergus/research/tfw_cvpr08_code.zip (within archive), 
-and http://www.cs.toronto.edu/~norouzi/research/mlh/data/LabelMe_gist.mat,
+- LabelMe_gist.mat is the 22K LabelMe dataset available from
+http://cs.nyu.edu/~fergus/research/tfw_cvpr08_code.zip, (within archive),
+or http://www.cs.toronto.edu/~norouzi/research/mlh/data/LabelMe_gist.mat,
 courtesy of Rob Fergus. Store the file under data/ folder.
 
 - *.mtx files for 5 small datasets (MNIST, LabelMe, Peekaboom,
