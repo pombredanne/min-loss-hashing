@@ -1,7 +1,7 @@
-function [score, recall] = evaluation2(Wtrue, Dhamm, maxn)
+function [score, recall] = evaluation2(S, Dhamm, maxn)
 
 % Input:
-%    Wtrue = true neighbors [Ntest * Ndataset], can be a full matrix NxN
+%    S = true neighbors [Ntest * Ndataset], can be a full matrix NxN
 %    Dhamm = estimated distances
 %    maxn = number of distinct distance values to be considered
 %
@@ -15,8 +15,8 @@ function [score, recall] = evaluation2(Wtrue, Dhamm, maxn)
 %  recall(n) = --------------------------------------------------------------
 %                          exp. # of total good pairs 
 
-[Ntest, Ntrain] = size(Wtrue);
-total_good_pairs = sum(Wtrue(:));
+[Ntest, Ntrain] = size(S);
+total_good_pairs = sum(S(:)==1);
 
 [sD indsD] = sort(Dhamm(:));
 [u ind] = unique(sD, 'first');
@@ -34,7 +34,7 @@ for n = 1:(maxn+1)
     retrieved_pairs = retrieved_pairs + hist(n);
     
     %exp. # of good pairs that have exactly the same code
-    retrieved_good_pairs = retrieved_good_pairs + sum(Wtrue(indsD(cumhist(n):cumhist(n+1)-1)));
+    retrieved_good_pairs = retrieved_good_pairs + sum(S(indsD(cumhist(n):cumhist(n+1)-1))==1);
     
     score(n) = retrieved_good_pairs/retrieved_pairs;
     recall(n)= retrieved_good_pairs/total_good_pairs;
