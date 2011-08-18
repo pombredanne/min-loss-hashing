@@ -34,7 +34,7 @@ loss_func = param.loss;
 % the bre loss no parameter is needed.
 
 if strcmp(loss_func.type, 'bre')
-  % Normalizing distance
+  % Normalizing distance values for bre
   data.Dtraining = data.Dtraining / max(data.Dtraining(:));
 end
 Ntraining = data.Ntraining;
@@ -44,11 +44,11 @@ if strcmp(loss_func.type, 'hinge')
   lambda = loss_func.lambda;
   rho = loss_func.rho;
 else
-  % rho is used to report precision and recall in eval(...) function below
+  % rho will be used to report precision and recall in eval(...) function below
   rho = ceil(2^(log(nb) / log(2) - 4) * 2);
 end
 
-indPos = find(data.WtrueTraining == 1);
+indPos = find(data.Straining == 1);
 nPos = numel(indPos);
 
 if (verbose)
@@ -64,7 +64,7 @@ if (verbose)
   else
     fprintf('zero offset = no\n');
   end
-  fprintf('weight decay = ''%.5f''\n', shrink_w);
+  fprintf('weight decay = ''%.0d''\n', shrink_w);
   fprintf('trainset = ''%s''\n', param.trainset);
   fprintf('max iter = %d\n', maxiter);
   fprintf('init eta = %.4f\n', initeta);
@@ -90,34 +90,36 @@ else
   % offset terms are initialized at zero
 end
 
-% Normalizing W
-% W = W./[repmat(sqrt(sum(W(:,1:end-1).^2,2)), [1 size(W,2)])];
 Wall{1} = W;
 bound = 0;
+emploss = 0;
+
+if (strcmp(param.trainset, 'train'))
+  testset = 'val';
+else
+  testset = 'test';
+end
 
 if (verbose && param.nval_during)
-  eval(-1, initeta, data, W, rho, verbose);
+  eval(-1, initeta, data, W, rho, verbose, testset);
 end
 if (verbose)
   fprintf('norm W=%.2f\n', sqrt(sum(W(:).^2)));
 end
 
 % initialization
-mean_ap  = 0;
-avg_err = 0;
-ncases = size_batches;
-nnz = 0;
-nnz_fp = 0; nnz_fn = 0; nnz_tp = 0; nnz_tn = 0;
-FP = 0; TP = 0; FN = 0; TN = 0;
-sum_resp = 0;
-n_sum_resp = 0;
-Winc = zeros(size(W));
-
 ntraining = 10^5; 			% total number of pairs to be considered in each iteration
 ncases = size_batches;
 maxb = floor(ntraining / ncases);	% number of mini-batches
 maxt = maxiter+param.nval_after-1;	% number of epochs
 
+mean_ap  = 0;
+avg_err = 0;
+nnz = 0;
+FP = 0; TP = 0; FN = 0; TN = 0;
+sum_resp = 0;
+n_sum_resp = 0;
+Winc = zeros(size(W));
 cases = zeros(ncases,1);
 
 for t=1:maxt
@@ -130,7 +132,6 @@ for t=1:maxt
   n_bits_on    = 0;
   n_bits_total = 0;
   nnz = 0;
-  bound = 0;
 
   for b=1:maxb
     if strcmp(loss_func.type, 'hinge')
@@ -144,6 +145,7 @@ for t=1:maxt
       cases(ncases1+1:end) = indPos(ceil(rand(ncases2, 1)*nPos));
     else
       cases = ceil(rand(ncases, 1)*NtrainingSqr);
+      ncases1 = ncases;
     end
     
     % cases = ceil(rand(ncases, 1)*NtrainingSqr);
@@ -152,20 +154,18 @@ for t=1:maxt
     x1 = Xtraining(:, x1nd(:));
     x2 = Xtraining(:, x2nd(:));
     
-    l = full(data.WtrueTraining(cases)');
-    
-    % if (b == 1)
-    %   display(l);
-    % end
+    l = full(data.Straining(cases)');
     
     x1 = [x1; ones(1,ncases)];
     Wx1 = W*x1;
     y1 = sign(Wx1);
-
+    % y1 is zero where Wx1 is zero
+    
     x2 = [x2; ones(1,ncases)];
     Wx2 = W*x2;
     y2 = sign(Wx2);			% we use -1/+1 instead of 0/1 values for the binary vectors
-
+    % y2 is zero where Wx2 is zero
+    
     y1plus  = Wx1;			% y1 bits all on
     y1minus = -Wx1;			% y1 bits all off
     y2plus  = Wx2;			% y2 bits all on
@@ -180,12 +180,11 @@ for t=1:maxt
         
     if (strcmp(loss_func.type, 'hinge'))
       % creating the hinge-like loss for the positive and negative pairs
-       loss = [kron(l == 1, ([zeros(1, rho) 1:(nb-rho+1)] / (nb-rho+1))')] + ...
-	      [kron(l == 0, ([(rho+1):-1:1 zeros(1, nb-rho)] / (rho+1))')];
-       % loss = (1/sqrt(lambda)) * [kron(l == 1, ([zeros(1, rho) 1:(nb-rho+1)] / (nb-rho+1))')] + ...
-       % 	      sqrt(lambda) * [kron(l == 0, ([(rho+1):-1:1 zeros(1, nb-rho)] / (rho+1))')];
+      loss = [kron(l == 1, ([zeros(1, rho) 1:(nb-rho+1)] / (nb-rho+1))')] + ...
+	     [kron(l == 0, ([(rho+1):-1:1 zeros(1, nb-rho)] / (rho+1))')];
+      % loss will be zero when l=-1, corresponding to unlabeled pairs
     elseif (strcmp(loss_func.type, 'bre'))
-      % creating the quadratic loss function of the BRE method
+      % creating the quadratic BRE loss function
       % it requires the Dtraining matrix
       d = data.Dtraining(cases);
       loss = [(repmat(d, [1 nb+1])-repmat([0:nb]/nb, [ncases 1])).^2]';
@@ -193,7 +192,8 @@ for t=1:maxt
       error('losstype is not supported.\n');
     end
 
-    [v nflip] = max([zeros(1, ncases); cumsum(val)] + loss); % loss-adjusted inference
+    % loss-adjusted inference
+    [v nflip] = max([zeros(1, ncases); cumsum(val)] + loss);
     nflip = nflip - 1;			% number of different bits in the solution of loss-adjusted inference
 
     y1p = zeros(size(y1));		% (y1p, y2p) are the solutions to loss-adjusted inference
@@ -211,10 +211,11 @@ for t=1:maxt
     nonzero_grad_2 = sum(abs(y2-y2p)) ~= 0;
     nonzero_grad = nonzero_grad_1 | nonzero_grad_2;
 
-    tmp = [x1(:,nonzero_grad_1) * (y1(:,nonzero_grad_1) - y1p(:,nonzero_grad_1))' + ...
-	   x2(:,nonzero_grad_2) * (y2(:,nonzero_grad_2) - y2p(:,nonzero_grad_2))']';
+    % gradient
+    grad = [x1(:,nonzero_grad_1) * (y1(:,nonzero_grad_1) - y1p(:,nonzero_grad_1))' + ...
+	    x2(:,nonzero_grad_2) * (y2(:,nonzero_grad_2) - y2p(:,nonzero_grad_2))']';
 
-    if (verbose)
+    if (verbose) % debug information
       n_bits_on    = n_bits_on    + sum(y1==1, 2) + sum(y2==1, 2);
       n_bits_total = n_bits_total + 2*ncases;
       
@@ -222,26 +223,47 @@ for t=1:maxt
       bits_useless   = (min(r, 1-r)) < .03;
       n_bits_useless = sum(bits_useless);
       
-      hdis = nb-(nb/2+(sum(y1.*y2)/2));
-      TP = TP + sum((hdis <= rho) & (l == 1));
-      TN = TN + sum((hdis >  rho) & (l == 0));
-      FP = FP + sum((hdis <= rho) & (l == 0));
-      FN = FN + sum((hdis >  rho) & (l == 1));
+      hdis = sum(y1 ~= y2);
+      TP = TP + sum((hdis(1:ncases1) <= rho) & (l(1:ncases1) == 1));
+      TN = TN + sum((hdis(1:ncases1) >  rho) & (l(1:ncases1) == 0));
+      FP = FP + sum((hdis(1:ncases1) <= rho) & (l(1:ncases1) == 0));
+      FN = FN + sum((hdis(1:ncases1) >  rho) & (l(1:ncases1) == 1));
     
       nnz = nnz + (sum(nonzero_grad_1)+sum(nonzero_grad_1))/2;
-      nnz_fn = nnz_fn + sum(nonzero_grad & (hdis >  rho) & (l == 1));
-      nnz_fp = nnz_fp + sum(nonzero_grad & (hdis <= rho) & (l == 0));
-      nnz_tp = nnz_tp + sum(nonzero_grad & (hdis <= rho) & (l == 1));
-      nnz_tn = nnz_tn + sum(nonzero_grad & (hdis >  rho) & (l == 0));
     
-      batch_bound =  sum(sum(W .* -tmp)) + sum(loss(nflip(:)+1+repmat(nb+1,[ncases,1]).*(0:ncases-1)'));
+      if (~isreal(hdis+1))
+	hdis
+	cases
+	[y1 y2]
+	error('not real');
+      end
+      
+      if (any(hdis+1<1))
+	hdis
+	cases
+	[y1 y2]
+	error('less than 1');
+      end
+      
+      if (any(hdis+1 ~= uint16(hdis+1)))
+	hdis-double(uint16(hdis))
+	cases
+	[y1 y2]
+	error('not uint16');
+      end
+      
+      batch_bound =  sum(sum(W .* -grad)) + sum(loss(nflip(:)+1+repmat(nb+1,[ncases,1]).*(0:ncases-1)'));
       bound = bound + batch_bound;
+      
+      batch_emploss = sum(loss((0:(ncases-1))*(nb+1)+(hdis+1)));
+      emploss = emploss + batch_emploss;
     end
 
-    Winc = momentum * Winc + eta * (tmp / ncases - shrink_w * [W(:,1:end-1) zeros(nb, 1)]);
+    % update rule of W
+    Winc = momentum * Winc + eta * (grad / ncases - shrink_w * [W(:,1:end-1) zeros(nb, 1)]);
     if (zerobias)
       Winc(:,end) = 0;
-    end  
+    end
     W = W + Winc;
     % we don't re-normalize rows of W as mentioned in the paper anymore, instead we use weight decay
     % i.e., L2 norm regularizer
@@ -249,23 +271,23 @@ for t=1:maxt
     % W = W./normW;
   end
   
-  fprintf('(%d/%.3f) ', t, eta);
+  fprintf('(%3d/%.3f)', t, eta);
 
   if (~verbose || (~param.nval_during && ~param.nval_after) || (verbose && mod(t, verbose) ~= 0))
     fprintf('\r');
   end
 
   if (verbose && t <= maxiter && mod(t, verbose) == 0)
-    fprintf([' bound:%.3f----nnz:%.1f  FN[%.0f%% %d]  FP[%.0f%% %d] TP[%.0f%% %d] TN[%.0f%% %d]' ...
-	     '----prec:%.3f  rec:%.3f  norm W=%.2f | nsm:%d (%.3f)'], bound/maxb, nnz/maxb, ...
-	    100*nnz_fn/FN, FN, 100*nnz_fp/FP, FP, 100*nnz_tp/TP, TP, 100*nnz_tn/TN, TN, TP/(TP+FP), ...
-	    TP/(TP+FN), sqrt(sum(W(:).^2)), n_bits_useless, min(min(r, 1 - r)));
+    fprintf([' ~~~ bound:%.3f > loss:%.3f ~~~ prec:%.3f  rec:%.3f ~~~ norm W=%.2f ~~~ min' ...
+	     ' activity:%.3f' ' ~~~ #useless bits:%d'], bound/(maxb*verbose), emploss/(maxb*verbose), ...
+	    TP/(TP+FP), TP/(TP+FN), sqrt(sum(W(:).^2)), min(min(r, 1 - r)), n_bits_useless);
     fprintf('\n');
     
-    nnz_fp = 0; nnz_fn = 0; nnz_tp = 0; nnz_tn = 0;
     FP = 0; TP = 0; FN = 0; TN = 0;
     sum_resp = 0;
     n_sum_resp = 0;
+    bound = 0;
+    emploss = 0;
   
     Wall{t+1} = W;
   end
@@ -273,12 +295,12 @@ for t=1:maxt
   
   if(param.nval_during && t < maxiter)
     if (mod(t, floor(maxiter/(param.nval_during))) == 0)
-      eval(t, eta, data, W, rho, verbose);
+      eval(t, eta, data, W, rho, verbose, testset);
     end
   end
   
   if(param.nval_after && t >= maxiter)
-    [ap err] = eval(t, eta, data, W, rho, verbose);
+    [ap err] = eval(t, eta, data, W, rho, verbose, testset);
     avg_err = avg_err + err;
     mean_ap  = mean_ap  + ap;
   end
@@ -299,7 +321,7 @@ final_params = param;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [ap err] = eval(t, eta, data, W, rho, verbose)
+function [ap err] = eval(t, eta, data, W, rho, verbose, testset)
 
 err = NaN; % err can be used to return any other type of error that is concerned.
 
@@ -311,13 +333,14 @@ if (strcmp(data.MODE, 'sem-22K-labelme'))
   % semantic labelme
   [ap pcode] = eval_labelme(W, data);
   if (verbose)
-    fprintf('~~~ prec(rho=%d): %.3f ~~~ recall(rho=%d): %.4f ~~~ ap: %.5f ~~~ ap(50): %.3f ~~~ ap(100): %.3f ~~~ ap(500): %.3f\n', ...
-	    rho, p1(rho+1), rho, r1(rho+1), ap, pcode(50), pcode(100), pcode(500));
+    fprintf(['%s set: prec(rho<=%d): %.3f ~~~ recall(rho<=%d): %.4f ~~~ ap: %.5f ~~~ ap(50): %.3f' ...
+	     ' ~~~ ap(100): %.3f ~~~ ap(500): %.3f\n'], testset, rho, p1(rho+1), rho, r1(rho+1), ...
+	    ap, pcode(50), pcode(100), pcode(500));
   end
 else
   ap = sum([(p1(1:end-1)+p1(2:end))/2].*[(r1(2:end)-r1(1:end-1))]);
   if (verbose)
-    fprintf('~~~ prec(rho=%d): %.3f ~~~ recall(rho=%d): %.4f ~~~ ap: %.5f\n', ...
-	    rho, p1(rho+1), rho, r1(rho+1), ap);
+    fprintf('%s set: prec(rho<=%d): %.3f ~~~ recall(rho<=%d): %.4f ~~~ ap: %.5f\n', testset, rho, ...
+	    p1(rho+1), rho, r1(rho+1), ap);
   end
 end

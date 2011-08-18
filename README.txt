@@ -1,13 +1,10 @@
-Minimal loss hashing for learning similarity preserving binary hash
-functions. Copyright (c) 2011, Mohammad Norouzi <mohammad.n@gmail.com>
-and David Fleet <fleet@cs.toronto.edu>. This is a free software; for
-license information please refer to license.txt file.
-
-~~~~~~~~~~~~~ Reference
+~~~~~~~~~~~~~ About
 
 This is an implementation of the algorithm presented in the paper
 "Minimal Loss Hashing for Compact Binary Codes, Mohammad Norouzi,
-David J Fleet, ICML 2010", with slight modifications.
+David J Fleet, ICML 2010", with slight modifications. The goal is to
+learn similarity preserving hash functions that map high-dimensional
+data onto binary codes.
 
 
 ~~~~~~~~~~~~~ Mex compilation (optional)
@@ -17,10 +14,13 @@ hammingDist.m. The mex implementation uses GCC built-in popcount
 function. Please make changes to eval_linear_hash.m and eval_labelme.m
 to use hammingDist2.
 
+
 ~~~~~~~~~~~~~ Usage
 
-download dataset files (see below)
-RUN.m includes code snippets for different experiments
+download dataset files (see below).
+RUN.m is the starting point. It includes the code for running
+experiments on different datasets appeared in our paper.
+
 
 ~~~~~~~~~~~~~ List of files
 
@@ -63,6 +63,7 @@ matrices and binary codes for semantic 22K LabelMe are already there.
 
 ... (incomplete)
 
+
 ~~~~~~~~~~~~~ Notes
 
 This implementation is slightly different from the algorithm presented
@@ -76,3 +77,11 @@ positive and negative pairs to be sampled during training. We usually
 use lambda=.5 meaning equal sampling of positive and negative
 pairs. For one of the experiments we set lambda=0 meaning the original
 distribution of positive and negative pairs.
+
+
+~~~~~~~~~~~~~ License
+
+Minimal loss hashing for learning similarity preserving binary hash
+functions. Copyright (c) 2011, Mohammad Norouzi <mohammad.n@gmail.com>
+and David Fleet <fleet@cs.toronto.edu>. This is a free software; for
+license information please refer to license.txt file.

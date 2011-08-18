@@ -40,7 +40,7 @@ clear pmlh rmlh best_params time_train time_validation;
 
 % verbose flag for validation is set to 0 (off)
 % to see the details during validation, set val_verbose to 15 (debug info every 15th iteration)
-val_verbose = 0;
+val_verbose = 25;
 
 % in the paper n_trials = 10 used
 n_trials = 3;
@@ -57,7 +57,7 @@ for nb = nbs
   % A heuristic for initial selection of rho
   data3 = create_training(data2, 'train', 1);
   [p0 r0] = eval_LSH(nb, data3);
-  rho = sum(r0 < .2);			% rho with 20% recall (nothing deep; just a heuristic)
+  rho = sum(r0 < .3);			% rho with 30% recall (nothing deep; just a heuristic)
   fprintf('automatic estimation of rho suggested rho = %d.\n', rho);
   clear data3;
     
@@ -98,7 +98,7 @@ for nb = nbs
     
   % validation for weight decay parameter
   fprintf('validation for weight decay parameter\n');
-  shrink_w_set = [.01 1e-3 1e-4 1e-5];
+  shrink_w_set = [.01 1e-3 1e-4 1e-5 1e-6];
   Wtmp_shrink_w = MLH(data2, {'hinge', best_params(i,nb).rho, best_params(i,nb).lambda}, nb, ...
 		      [best_params(i,nb).eta], .9, 100, 'train', val_iter, val_zerobias, 0, 5, ...
 		      val_verbose, shrink_w_set, 0);
@@ -109,17 +109,17 @@ for nb = nbs
       best_params(i,nb).shrink_w = Wtmp_shrink_w(j).params.shrink_w;
     end
     if (val_verbose)
-      fprintf('%.3f %.6f\n', Wtmp_shrink_w(j).ap, Wtmp_shrink_w(j).params.shrink_w);
+      fprintf('%.0d %.6f\n', Wtmp_shrink_w(j).ap, Wtmp_shrink_w(j).params.shrink_w);
     end
   end
-  fprintf('Best weight decay (%d bits) = %.6f\n', nb, best_params(i,nb).shrink_w);
+  fprintf('Best weight decay (%d bits) = %.0d\n', nb, best_params(i,nb).shrink_w);
 
   time_validation(i,nb) = toc(t0);  
   best_params(i,nb)
 
   % ---- training on the train+val set -----
   t1 = tic;
-  % blow 500 learning iterations are used, using more might provide slightly better results
+  % below 500 learning iterations are used, using more might provide slightly better results
   % in the paper we used 2000
   train_iter = 500;
   train_zerobias = 1;
@@ -141,7 +141,7 @@ for nb = nbs
 end
 end
 
-end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+end
 if (doBRE) % ~~~~~~~~~~~~~~~~~~~~~~~~~~~ MLH with BRE loss ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 % NOTE: The following script runs the implementation of Minimal Loss Hashing with BRE Cost
@@ -174,7 +174,7 @@ for nb = nbs
     
   % validation for weight decay parameter
   fprintf('validation for weight decay parameter\n');
-  shrink_w_set = [.01 1e-3 1e-4 1e-5];
+  shrink_w_set = [.01 1e-3 1e-4 1e-5 1e-6];
   Wtmp_shrink_w = MLH(data2, {'bre'}, nb, [best_params(i,nb).eta], .9, 100, 'train', 75, 1, 0, ...
 		      4, val_verbose, shrink_w_set, 0);
   best_ap = -1;
@@ -187,7 +187,7 @@ for nb = nbs
       fprintf('%.3f %.6f\n', Wtmp_shrink_w(j).ap, Wtmp_shrink_w(j).params.shrink_w);
     end
   end
-  fprintf('Best weight decay (%d bits) = %.6f\n', nb, best_params(i,nb).shrink_w);
+  fprintf('Best weight decay (%d bits) = %.0d\n', nb, best_params(i,nb).shrink_w);
   
   time_validation(i,nb) = toc(t0);
   
@@ -195,7 +195,7 @@ for nb = nbs
 
   % ----- training on the train+val set -----
   t1 = tic;
-  % blow 500 iterations used, using more iterations provides slightly better results
+  % below 500 learning iterations are used, using more might provide slightly better results
   Wbre{i, nb} = MLH(data2, {'bre'}, nb, [best_params(i,nb).eta], .9, [best_params(i,nb).size_batches], ...
 		    'trainval', 500, 1, 5, 1, 50, [best_params(i,nb).shrink_w], 1);
   time_train(i,nb) = toc(t1);
@@ -212,7 +212,7 @@ for nb = nbs
 end
 end
 
-end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+end
 if (doLSH) % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ LSH ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 % in the paper results are reported for n_trials = 10.
@@ -236,7 +236,7 @@ else
   save res/lsh_euc-22K-labelme plsh rlsh
 end
 
-end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+end
 if (doPlots) % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PLOTS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 load res/mlh_euc-22K-labelme-pca
@@ -284,7 +284,7 @@ for nb = nbs;
 end
 
 end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-end % done with Euclidean 22K LabelMe done ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+end % done with Euclidean 22K LabelMe ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -323,7 +323,7 @@ for nb = nbs
   % A heuristic for initial selection of rho
   data3 = create_training(data2, 'train', 1);
   [p0 r0] = eval_LSH(nb, data3);
-  rho = sum(r0 < .2);% rho with 20% recall (nothing deep; just a heuristic)
+  rho = sum(r0 < .3);% rho with 30% recall (nothing deep; just a heuristic)
   fprintf('automatic estimation of rho suggested rho = %d.\n', rho);
   clear data3;
 
@@ -364,7 +364,7 @@ for nb = nbs
 
   % validation for weight decay parameter
   fprintf('validation for weight decay parameter\n');
-  shrink_w_set = [.01 1e-3 1e-4 1e-5];
+  shrink_w_set = [.01 1e-3 1e-4 1e-5 1e-6];
   Wtmp_shrink_w = MLH(data2, {'hinge', best_params(i,nb).rho, best_params(i,nb).lambda}, nb, ...
 		      [best_params(i,nb).eta], .9, 100, 'train', val_iter, val_zerobias, 0, 5, ...
 		      val_verbose, shrink_w_set, 0);
@@ -378,14 +378,14 @@ for nb = nbs
       fprintf('%.3f %.6f\n', Wtmp_shrink_w(j).ap, Wtmp_shrink_w(j).params.shrink_w);
     end
   end
-  fprintf('Best weight decay (%d bits) = %.6f\n', nb, best_params(i,nb).shrink_w);
+  fprintf('Best weight decay (%d bits) = %.0d\n', nb, best_params(i,nb).shrink_w);
 
   time_validation(i,nb) = toc(t0);
   best_params(i,nb)
 
   % ---- training on the train+val set -----
   t1 = tic;
-  % blow 500 learning iterations are used, using more provides slightly better results
+  % blow 500 iterations used, using more iterations provides slightly better results
   % in the paper we used 2000
   train_iter = 500;
   train_zerobias = 1;
@@ -408,7 +408,7 @@ end
 end
 
 end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-end % done with Semantic 22K LabelMe done ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+end % done with Semantic 22K LabelMe ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -490,7 +490,7 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
   end
 end
 
-end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+end
 if (doBRE) % ~~~~~~~~~~~~~~~~~~~~~~~~~~ MLH with BRE loss ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'} 
@@ -547,7 +547,7 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
   end
 end
 
-end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+end
 if (doLSH) % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ LSH ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   
 for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
@@ -581,7 +581,7 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
   save(['res/lsh_', mode, '.mat'], 'plsh', 'rlsh', 'mode', 'n_trials');
 end
 
-end % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+end
 if (doPlots) % ~~~~~~~~~~~~~~~~~~~~~~~ Plots for Small Datasets ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 % Precision-Recall curves for different code lengths
@@ -669,7 +669,7 @@ for modei = {'labelme', 'mnist', 'peekaboom', 'nursery', 'notredame', '10d'}
   n_lines = size(p,2);
   fig = make_err_plot(repmat(nbs_for_plot', [1 n_lines]), p(nbs_for_plot, :), e(nbs_for_plot, :), ...
 		      {'MLH', 'BRE', 'LSH'}, ...% 'SH'}, ...
-					  cap, 'br', 1);
+		      cap, 'br', 1);
   %  exportfig(fig, ['figs/',mode,'-prec-',num2str(R),'.eps'], 'Color', 'rgb');
   
   cap.tit = [mode, ' (recall)'];

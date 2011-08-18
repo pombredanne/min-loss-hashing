@@ -2,7 +2,7 @@ function data = create_training(data, trainset, doval)
 
 Ntraining = data.Ntraining;
 Xtraining = data.Xtraining;
-WtrueTraining = data.WtrueTraining;
+Straining = data.Straining;
 
 if (strcmp(trainset, 'train'))
   % one tenth of the training points are used for validation
@@ -12,10 +12,10 @@ if (strcmp(trainset, 'train'))
   % we re-define test set to be the validation set.
   % this way all the evaluation codes remain unchanged.
   Xtest = Xtraining(:, Ntraining+1:end);
-  WtrueTestTraining = WtrueTraining(Ntraining+1:end, 1:Ntraining);
-  WtrueTestTraining(WtrueTestTraining  == -1) = 0;
+  StestTraining = Straining(Ntraining+1:end, 1:Ntraining);
+  StestTraining(StestTraining  == -1) = 0;
   Xtraining = Xtraining(:, 1:Ntraining);
-  WtrueTraining = WtrueTraining(1:Ntraining, 1:Ntraining);
+  Straining = Straining(1:Ntraining, 1:Ntraining);
   if (isfield(data, 'Dtraining'))
     Dtraining = data.Dtraining(1:Ntraining, 1:Ntraining);  
     DtestTraining = data.Dtraining(Ntraining+1:end, 1:Ntraining);
@@ -37,7 +37,7 @@ elseif (strcmp(trainset, 'trainval'))
   if (isfield(data, 'Xtest'))
     Ntest = data.Ntest;
     Xtest = data.Xtest;
-    WtrueTestTraining = data.WtrueTestTraining;
+    StestTraining = data.StestTraining;
 
     % if some kind of labeling exists e.g., class labels    
     if (isfield(data, 'Ltraining'))
@@ -50,7 +50,7 @@ else
 end
 
 data.Xtraining = Xtraining;
-data.WtrueTraining = WtrueTraining;
+data.Straining = Straining;
 data.Ntraining = Ntraining;
 if (isfield(data, 'Dtraining'))
   data.Dtraining = Dtraining;
@@ -64,7 +64,7 @@ if (exist('Xtest') && doval)
     data.DtestTraining = DtestTraining;
   end
   data.Xtest = Xtest;  
-  data.WtrueTestTraining = WtrueTestTraining;
+  data.StestTraining = StestTraining;
   data.Ntest = Ntest;
 end
 if (~doval)
@@ -75,7 +75,7 @@ if (~doval)
   if (isfield(data, 'DtestTraining'))
     data = rmfield(data, 'DtestTraining');
   end
-  if (isfield(data, 'WtrueTestTraining'))
-    data = rmfield(data, 'WtrueTestTraining');
+  if (isfield(data, 'StestTraining'))
+    data = rmfield(data, 'StestTraining');
   end
 end

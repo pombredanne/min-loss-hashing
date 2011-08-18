@@ -76,25 +76,25 @@ elseif (strcmp(MODE, 'sem-22K-labelme'))
   Ntraining = numel(ndxtrain);
   Ntest = numel(ndxtest);
 
-  DtrueTraining = -DistLM(ndxtrain, ndxtrain);
-  DtrueTestTraining = -DistLM(ndxtest, ndxtrain);
+  Dtraining = -DistLM(ndxtrain, ndxtrain);
+  DtestTraining = -DistLM(ndxtest, ndxtrain);
 
-  sorted = sort(DtrueTraining, 2);
-  D = sparse(bsxfun(@lt, DtrueTraining, sorted(:,operand1+1)));
-  sorted2 = sort(DtrueTestTraining, 2);
-  D2 = sparse(bsxfun(@lt, DtrueTestTraining, sorted2(:,operand1+1)));
+  sorted = sort(Dtraining, 2);
+  D = sparse(bsxfun(@lt, Dtraining, sorted(:,operand1+1)));
+  sorted2 = sort(DtestTraining, 2);
+  D2 = sparse(bsxfun(@lt, DtestTraining, sorted2(:,operand1+1)));
   
   nNeighbors = operand1; % number of ground-truth neighbors for each training point (on average)
 
   data.MODE = MODE;
   data.Xtraining = Xtraining;
   data.Xtest = Xtest;
-  data.WtrueTraining = D | D';
-  data.WtrueTestTraining = D2;
+  data.Straining = D | D';
+  data.StestTraining = D2;
   data.Ntraining = Ntraining;
   data.Ntest = Ntest;
-  data.Dtraining = DtrueTraining;
-  data.DtestTraining = DtrueTestTraining;
+  data.Dtraining = Dtraining;
+  data.DtestTraining = DtestTraining;
   data.averageNumberNeighbors = nNeighbors;
   data.max_care = operand2; % used for cross-validation in eval_labelme function
 
@@ -138,27 +138,27 @@ function data = construct_data(Xtraining, Xtest, sizeSets, avgNNeighbors, propor
 % proportionNeighbors is between 0 and 1 which determines the fraction of [similar pairs / total pairs]
 
 [Ntraining, Ntest] = deal(sizeSets(1), sizeSets(2));
-DtrueTraining = distMat(Xtraining);
+Dtraining = distMat(Xtraining);
 
 if (~isempty(avgNNeighbors))
-  sortedD = sort(DtrueTraining, 2);
+  sortedD = sort(Dtraining, 2);
   threshDist = mean(sortedD(:,avgNNeighbors));
   data.avgNNeighbors = avgNNeighbors;
 else
-  sortedD = sort(DtrueTraining(:));
+  sortedD = sort(Dtraining(:));
   threshDist = sortedD(ceil(proportionNeighbors * numel(sortedD)));
   data.proportionNeighbors = proportionNeighbors;
 end
 
-DtrueTestTraining = distMat(Xtest, Xtraining); % size = [Ntest x Ntraining]
+DtestTraining = distMat(Xtest, Xtraining); % size = [Ntest x Ntraining]
 
 data.Xtraining = Xtraining;
 data.Xtest = Xtest;  
-data.WtrueTraining = DtrueTraining < threshDist;
-data.WtrueTestTraining = DtrueTestTraining < threshDist;
+data.Straining = Dtraining < threshDist;
+data.StestTraining = DtestTraining < threshDist;
 
 data.Ntraining = Ntraining;
 data.Ntest = Ntest;
 data.threshDist = threshDist;
-data.Dtraining = DtrueTraining;
-data.DtestTraining = DtrueTestTraining;
+data.Dtraining = Dtraining;
+data.DtestTraining = DtestTraining;

@@ -1,7 +1,7 @@
 % Copyright (c) 2011, Mohammad Norouzi and David Fleet
 
 function [Wset] = MLH(data_in, loss_cell, nb, eta_set, momentum, size_batches_set, trainset, maxiter, ...
-		    zerobias_set, nval_during, nval_after, verbose, shrink_w_set, shrink_eta)
+		      zerobias_set, nval_during, nval_after, verbose, shrink_w_set, shrink_eta)
 
 % Performs validation on sets of parameters by calling appropriate instances of learnMLH function.
 %
@@ -84,14 +84,14 @@ for zerobias = zerobias_set
     end
     if (numel(loss_set) > 1)
       if strcmp(loss.type, 'hinge')
-	fprintf('rho:%d / lambda:%f  ', loss.rho, loss.lambda);
+	fprintf('rho:%d / lambda:%.2f  ', loss.rho, loss.lambda);
       end
     end
     if (numel(eta_set) > 1)
       fprintf('eta: %.3f  ', eta);
     end
     if (numel(shrink_w_set) > 1)
-      fprintf('shrink_w: %.6f  ', shrink_w);
+      fprintf('shrink_w: %.0d  ', shrink_w);
     end
     fprintf(' --> ap:%.3f\n', ap);
   end
