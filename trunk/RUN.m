@@ -145,8 +145,8 @@ end
 if (doBRE) % ~~~~~~~~~~~~~~~~~~~~~~~~~~~ MLH with BRE loss ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 % NOTE: The following script runs the implementation of Minimal Loss Hashing with BRE Cost
-% Function. The code of B. Kulis and T. Darrell, “Learning to Hash with Binary Reconstructive
-% Embeddings”, NIPS 2009, can be downloaded from Brian Kulis's homepage. Their implementation uses a
+% Function. The code of B. Kulis and T. Darrell, "Learning to Hash with Binary Reconstructive
+% Embeddings", NIPS 2009, can be downloaded from Brian Kulis's homepage. Their implementation uses a
 % different approach for optimization, i.e., co-ordinate descent.
 
 clear Wtmp_shrink_w Wbre;
