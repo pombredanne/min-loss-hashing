@@ -15,30 +15,31 @@ function. Please make changes to eval_linear_hash.m and eval_labelme.m
 to use hammingDist2.
 
 
+~~~~~~~~~~~~~ Data
+
+You should download the dataset files separately:
+
+- LabelMe_gist.mat is the 22K LabelMe dataset available at
+http://cs.nyu.edu/~fergus/research/tfw_cvpr08_code.zip (within archive), 
+and http://www.cs.toronto.edu/~norouzi/research/mlh/data/LabelMe_gist.mat,
+courtesy of Rob Fergus. Store the file under data/ folder.
+
+- *.mtx files for 5 small datasets (MNIST, LabelMe, Peekaboom,
+Photo-Tourism, Nursery) can be downloaded from
+http://www.eecs.berkeley.edu/~kulis/data/, courtesy of Brian
+Kulis. Store the files under data/kulis/ directory.
+
+
 ~~~~~~~~~~~~~ Usage
 
-download dataset files (see below).
 RUN.m is the starting point. It includes the code for running
-experiments on different datasets appeared in our paper.
+experiments on different datasets appeared in our paper. It can also
+produce performance plots.
 
 
 ~~~~~~~~~~~~~ List of files
 
-data/ folder will contain dataset files which you should download
-separately:
-
-- data/LabelMe_gist.mat is the 22K LabelMe dataset available from
-http://cs.nyu.edu/~fergus/research/tfw_cvpr08_code.zip, courtesy of
-Rob Fergus.
-
-- data/kulis/*.mtx files for 5 small datasets (MNIST, LabelMe,
-Peekaboom, Photo-Tourism, Nursery) can be downloaded from
-http://www.eecs.berkeley.edu/~kulis/data/, courtesy of Brian
-Kulis. (store the files under data/kulis/ sub-directory)
-
-RUN.m: is the starting point.  It shows how the code can be run for
-Euclidean/Semantic 22K LabelMe and small datasets. It also includes
-the codes for creating the figures.
+data/ folder will contain dataset files.
 
 learnMLH.m: the main file for learning hash functions. It performs
 stochastic gradient descent to learn the hash parameters.
@@ -61,7 +62,7 @@ used in the paper.
 res/ folder will store the result files. Pre-trained parameter
 matrices and binary codes for semantic 22K LabelMe are already there.
 
-... (incomplete)
+...
 
 
 ~~~~~~~~~~~~~ Notes
