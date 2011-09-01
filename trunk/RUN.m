@@ -40,7 +40,7 @@ clear pmlh rmlh best_params time_train time_validation;
 
 % verbose flag for validation is set to 0 (off)
 % to see the details during validation, set val_verbose to 15 (debug info every 15th iteration)
-val_verbose = 25;
+val_verbose = 0;
 
 % in the paper n_trials = 10 used
 n_trials = 3;
