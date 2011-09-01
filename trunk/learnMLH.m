@@ -80,13 +80,13 @@ if (verbose)
   fprintf('---------------------------\n');
 end
 
-if (exist('initW'))
+input_dim = size(Xtraining, 1);
+if (exist('initW', 'var'))
   % initW is passed from ouside
   W = initW;
 else
   % initialize W with LSH
-  input_dim = size(Xtraining, 1);
-  initW = [.1*randn(nb, input_dim) zeros(nb, 1)];
+  W = [.1*randn(nb, input_dim) zeros(nb, 1)];
   % offset terms are initialized at zero
 end
 
@@ -100,7 +100,7 @@ else
   testset = 'test';
 end
 
-if (verbose && param.nval_during)
+if (verbose && (param.nval_during || param.nval_after))
   eval(-1, initeta, data, W, rho, verbose, testset);
 end
 if (verbose)
@@ -117,8 +117,6 @@ mean_ap  = 0;
 avg_err = 0;
 nnz = 0;
 FP = 0; TP = 0; FN = 0; TN = 0;
-sum_resp = 0;
-n_sum_resp = 0;
 Winc = zeros(size(W));
 cases = zeros(ncases,1);
 
@@ -209,7 +207,7 @@ for t=1:maxt
 
     nonzero_grad_1 = sum(abs(y1-y1p)) ~= 0;
     nonzero_grad_2 = sum(abs(y2-y2p)) ~= 0;
-    nonzero_grad = nonzero_grad_1 | nonzero_grad_2;
+    % nonzero_grad = nonzero_grad_1 | nonzero_grad_2;
 
     % gradient
     grad = [x1(:,nonzero_grad_1) * (y1(:,nonzero_grad_1) - y1p(:,nonzero_grad_1))' + ...
@@ -230,28 +228,7 @@ for t=1:maxt
       FN = FN + sum((hdis(1:ncases1) >  rho) & (l(1:ncases1) == 1));
     
       nnz = nnz + (sum(nonzero_grad_1)+sum(nonzero_grad_1))/2;
-    
-      if (~isreal(hdis+1))
-	hdis
-	cases
-	[y1 y2]
-	error('not real');
-      end
-      
-      if (any(hdis+1<1))
-	hdis
-	cases
-	[y1 y2]
-	error('less than 1');
-      end
-      
-      if (any(hdis+1 ~= uint16(hdis+1)))
-	hdis-double(uint16(hdis))
-	cases
-	[y1 y2]
-	error('not uint16');
-      end
-      
+          
       batch_bound =  sum(sum(W .* -grad)) + sum(loss(nflip(:)+1+repmat(nb+1,[ncases,1]).*(0:ncases-1)'));
       bound = bound + batch_bound;
       
@@ -260,10 +237,13 @@ for t=1:maxt
     end
 
     % update rule of W
-    Winc = momentum * Winc + eta * (grad / ncases - shrink_w * [W(:,1:end-1) zeros(nb, 1)]);
     if (zerobias)
+      Winc = momentum * Winc + eta * (grad ./ ncases - shrink_w * W);
       Winc(:,end) = 0;
+    else
+      Winc = momentum * Winc + eta * (grad ./ ncases - shrink_w * [W(:,1:end-1) zeros(nb, 1)]);
     end
+    
     W = W + Winc;
     % we don't re-normalize rows of W as mentioned in the paper anymore, instead we use weight decay
     % i.e., L2 norm regularizer
@@ -279,19 +259,18 @@ for t=1:maxt
 
   if (verbose && t <= maxiter && mod(t, verbose) == 0)
     fprintf([' ~~~ bound:%.3f > loss:%.3f ~~~ prec:%.3f  rec:%.3f ~~~ norm W=%.2f ~~~ min' ...
-	     ' activity:%.3f' ' ~~~ #useless bits:%d'], bound/(maxb*verbose), emploss/(maxb*verbose), ...
-	    TP/(TP+FP), TP/(TP+FN), sqrt(sum(W(:).^2)), min(min(r, 1 - r)), n_bits_useless);
+	     ' activity:%.3f ~~~ #useless bits:%d ~~~ #non-zero-gradient:%.1f'], bound/(maxb*verbose), ...
+	    emploss/(maxb*verbose), TP/(TP+FP), TP/(TP+FN), sqrt(sum(W(:).^2)), ...
+	    min( min(r, 1 - r)), n_bits_useless, nnz/(maxb*verbose));
     fprintf('\n');
     
     FP = 0; TP = 0; FN = 0; TN = 0;
-    sum_resp = 0;
-    n_sum_resp = 0;
     bound = 0;
     emploss = 0;
+    nnz = 0;
   
     Wall{t+1} = W;
   end
-  nnz = 0;
   
   if(param.nval_during && t < maxiter)
     if (mod(t, floor(maxiter/(param.nval_during))) == 0)
