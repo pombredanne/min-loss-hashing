@@ -129,7 +129,6 @@ for t=1:maxt
 
   n_bits_on    = 0;
   n_bits_total = 0;
-  nnz = 0;
 
   for b=1:maxb
     if strcmp(loss_func.type, 'hinge')
