@@ -34,20 +34,4 @@ inline int match(UINT8*P, UINT8*Q, int codelb) {
 	}
 }
 
-void split (UINT8* code, int codelb, UINT64*chunks, int nchunks, int chunkl) {
-	UINT64 temp = 0x0;
-	int nbits = 0, nbyte = 0;
-	UINT64 mask = chunkl==64? 0xFFFFFFFFFFFFFFFF : ((UINT64_1 << chunkl) - UINT64_1);
-	for (int i=0; i<nchunks; i++) {
-		while (nbits < chunkl && nbyte < codelb) {
-			temp |= ((UINT64)code[nbyte]<<nbits);
-			nbits += 8; nbyte ++;
-		}
-		chunks[i] = temp & mask;
-		temp = chunkl==64? temp==0x0: temp >> chunkl; 
-		nbits -= chunkl;
-	}
-}
-
-
 #endif
