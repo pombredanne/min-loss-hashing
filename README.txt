@@ -26,8 +26,9 @@ courtesy of Rob Fergus. Store the file under data/ folder.
 
 - *.mtx files for 5 small datasets (MNIST, LabelMe, Peekaboom,
 Photo-Tourism, Nursery) can be downloaded from
-http://www.eecs.berkeley.edu/~kulis/data/, courtesy of Brian
-Kulis. Store the files under data/kulis/ directory.
+http://www.cs.toronto.edu/~norouzi/research/mlh/data/5_datasets.tar,
+courtesy of Brian Kulis. Untar the archive file under data/kulis/
+directory.
 
 
 ~~~~~~~~~~~~~ Usage
