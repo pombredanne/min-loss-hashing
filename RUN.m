@@ -83,7 +83,7 @@ for nb = nbs
   rho_set = rho + [-2 -1 0 +1 +2] * step;
   rho_set(rho_set < 1) = [];
   Wtmp_rho = MLH(data2, {'hinge', rho_set, best_params(i,nb).lambda}, nb, [best_params(i,nb).eta], ...
-		 .9, 100, 'train', val_iter, val_zerobias, 0, 5, val_verbose, best_params(i,nb).shrink_w, 0);
+  		 .9, 100, 'train', val_iter, val_zerobias, 0, 5, val_verbose, best_params(i,nb).shrink_w, 0);
   best_ap = -1;
   for j = 1:numel(Wtmp_rho)
     if (Wtmp_rho(j).ap > best_ap)
@@ -109,7 +109,7 @@ for nb = nbs
       best_params(i,nb).shrink_w = Wtmp_shrink_w(j).params.shrink_w;
     end
     if (val_verbose)
-      fprintf('%.0d %.6f\n', Wtmp_shrink_w(j).ap, Wtmp_shrink_w(j).params.shrink_w);
+      fprintf('%.3f %.2d\n', Wtmp_shrink_w(j).ap, Wtmp_shrink_w(j).params.shrink_w);
     end
   end
   fprintf('Best weight decay (%d bits) = %.0d\n', nb, best_params(i,nb).shrink_w);
