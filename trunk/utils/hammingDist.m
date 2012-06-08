@@ -8,7 +8,7 @@ function Dh = hammingDist(B1, B2)
 %    B1, B2: compact bit vectors. Each binary code is one column comprising of uint8 numbers.
 %    size(B1) = [nwords, ndatapoints1]
 %    size(B2) = [nwords, ndatapoints2]
-%    It is faster if ndatapoints1 < ndatapoints2
+%    It is faster if ndatapoints2 < ndatapoints1
 % 
 % Output:
 %    Dh = hamming distance. 
