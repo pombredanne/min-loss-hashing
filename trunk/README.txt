@@ -11,10 +11,12 @@ data onto binary codes.
 
 Compile loss_adj_inf_mex.cpp enabling multi-core functionality by running:
 mex loss_adj_inf_mex.cpp CXXFLAGS="\$CXXFLAGS -fopenmp" LDFLAGS="\$LDFLAGS -fopenmp"
-If you are unable to compile this mex file, you can change learnMLH.m
-by uncommenting the matlab code for loss adjusted inference. You can
-set the environment OMP_NUM_THREADS to control the maximum number of
-cores used by loss_adj_inf_mex.
+You can set the environment OMP_NUM_THREADS to control the maximum
+number of cores used by loss_adj_inf_mex.
+
+If you are unable to compile loss_adj_inf_mex, you can change
+learnMLH.m by uncommenting the matlab code for loss adjusted
+inference, and commenting the call to loss_adj_inf_mex.
 
 Compile utils/hammDist_mex.cpp, which is a faster alternative to
 hammDist.m. The mex implementation uses GCC built-in popcount
