@@ -9,10 +9,15 @@ data onto binary codes.
 
 ~~~~~~~~~~~~~ Mex compilation (optional)
 
-Compile utils/hammingDist2.cpp, which is a faster alternative to
-hammingDist.m. The mex implementation uses GCC built-in popcount
+Compile utils/hammDist_mex.cpp, which is a faster alternative to
+hammDist.m. The mex implementation uses GCC built-in popcount
 function. Please make changes to eval_linear_hash.m and eval_labelme.m
-to use hammingDist2.
+to use hammDist if you are unable to compile the mex file.
+
+Compile utils/accumarray_reverse.cpp, which is used within the
+evaluation function utils/evalution3.m. If you are unable to compile
+this mex file, you can replace evaluation3 with evalution2 (slower) in
+utils/eval_linear_hash.m
 
 
 ~~~~~~~~~~~~~ Data
