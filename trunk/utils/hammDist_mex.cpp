@@ -4,7 +4,7 @@
 #include "bitops.h"
 
 /*
-dist = hammD2 (mat1, mat2)
+dist = hammDist_mex (mat1, mat2)
 
 Input: 
    mat1, mat2: compact uint8 bit vectors. Each binary code is one column.
@@ -16,18 +16,18 @@ Output:
    size(dist) = [ndatapoints1, ndatapoints2]
 
 /* Input Arguments */
-#define	MAT1   	prhs[0]  // Uint8 vector of size n x 1
-#define MAT2    prhs[1]  // Uint8 matrix of size n x m
+#define	MAT1   	prhs[0]  // Uint8 vector of size k x n
+#define MAT2    prhs[1]  // Uint8 matrix of size k x m
 
 /* Output Arguments */
-#define	OUTPUT	plhs[0]  // Double vector 1 x m binary hamming distance
+#define	OUTPUT	plhs[0]  // Double vector n x m binary hamming distance
 
 
 void mexFunction( int nlhs, mxArray *plhs[], 
 		  int nrhs, const mxArray*prhs[] )
      
 { 
-    int nWords, nVecs1, nVecs2, nWords_Vecs,  i, j;
+    int nWords, nVecs1, nVecs2, nWords2,  i, j;
     unsigned int dist;
     UINT16* outputp;
     unsigned char tmp, *pMat2, *pMat1, *pV;
@@ -46,11 +46,11 @@ void mexFunction( int nlhs, mxArray *plhs[],
     /* Get dimensions of inputs */
     nWords = (int) mxGetM(MAT2); 
     nVecs1 = (int) mxGetN(MAT2); 
-    nWords_Vecs = (int)  mxGetM(MAT1); 
+    nWords2 = (int)  mxGetM(MAT1); 
     nVecs2 = (int) mxGetN(MAT1);
     
-    if (nWords!=nWords_Vecs)
-	mexErrMsgTxt("Dimension mismatch btw. matrix and vector");
+    if (nWords != nWords2)
+	mexErrMsgTxt("Dimension mismatch between the two input matrices.");
     
     // Create output array
     OUTPUT = mxCreateNumericMatrix(nVecs2, nVecs1, mxUINT16_CLASS, mxREAL);
