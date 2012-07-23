@@ -67,7 +67,7 @@ if (verbose)
   fprintf('weight decay = ''%.0d''\n', shrink_w);
   fprintf('trainset = ''%s''\n', param.trainset);
   fprintf('max iter = %d\n', maxiter);
-  fprintf('init eta = %.4f\n', initeta);
+  fprintf('init eta = %.1d\n', initeta);
   if (param.shrink_eta)
     fprintf('shrink eta = yes\n');
   else
@@ -130,6 +130,7 @@ for t=1:maxt
   n_bits_on    = 0;
   n_bits_total = 0;
 
+  tic
   for b=1:maxb
     if strcmp(loss_func.type, 'hinge')
       ncases2 = min(round(ncases * max(lambda - (nPos / NtrainingSqr), 0)), ncases); 
@@ -176,7 +177,7 @@ for t=1:maxt
     [val indval] = sort(valneq-valeq, 'descend');
         
     if (strcmp(loss_func.type, 'hinge'))
-      % creating the hinge-like loss for the positive and negative pairs
+      % creating the hinge loss for the positive and negative pairs
       loss = [kron(l == 1, ([zeros(1, rho) 1:(nb-rho+1)] / (nb-rho+1))')] + ...
 	     [kron(l == 0, ([(rho+1):-1:1 zeros(1, nb-rho)] / (rho+1))')];
       % loss will be zero when l=-1, corresponding to unlabeled pairs
@@ -189,20 +190,23 @@ for t=1:maxt
       error('losstype is not supported.\n');
     end
 
-    % loss-adjusted inference
-    [v nflip] = max([zeros(1, ncases); cumsum(val)] + loss);
-    nflip = nflip - 1;			% number of different bits in the solution of loss-adjusted inference
+    % loss-adjusted inference (using a mex file)
+    [y1p y2p nflip] = loss_adj_inf_mex(Wx1, Wx2, loss);
 
-    y1p = zeros(size(y1));		% (y1p, y2p) are the solutions to loss-adjusted inference
-    y2p = zeros(size(y2));    
-    tmp = repmat((1:nb)',[1 ncases]) <= repmat(nflip, [nb 1]);
-    indval = squeeze(indval) + repmat(0:nb:(ncases-1)*nb,[nb, 1]); % working out the indices
-    diffbits = indval(tmp);
-    y1p(diffbits) = 2*(2-indneq(diffbits))-1; % indneq = 1/2 --> +1/-1
-    y2p(diffbits) = 2*(indneq(diffbits)-1)-1; % indneq = 1/2 --> -1/+1
-    samebits = find(y1p == 0);
-    y1p(samebits) = 2*(2-indeq(samebits))-1;
-    y2p(samebits) = 2*(2-indeq(samebits))-1;
+    % % loss-adjusted inference (without using a mex file)
+
+    % [v nflip] = max([zeros(1, ncases); cumsum(val)] + loss);
+    % nflip = nflip - 1;		% number of different bits in the solution of loss-adjusted inference
+    % y1p = zeros(size(y1));		% (y1p, y2p) are the solutions to loss-adjusted inference
+    % y2p = zeros(size(y2));    
+    % tmp = repmat((1:nb)',[1 ncases]) <= repmat(nflip, [nb 1]);
+    % indval = squeeze(indval) + repmat(0:nb:(ncases-1)*nb,[nb, 1]); % working out the indices
+    % diffbits = indval(tmp);
+    % y1p(diffbits) = 2*(2-indneq(diffbits))-1; % indneq = 1/2 --> +1/-1
+    % y2p(diffbits) = 2*(indneq(diffbits)-1)-1; % indneq = 1/2 --> -1/+1
+    % samebits = find(y1p == 0);
+    % y1p(samebits) = 2*(2-indeq(samebits))-1;
+    % y2p(samebits) = 2*(2-indeq(samebits))-1;
 
     nonzero_grad_1 = sum(abs(y1-y1p)) ~= 0;
     nonzero_grad_2 = sum(abs(y2-y2p)) ~= 0;
@@ -226,7 +230,7 @@ for t=1:maxt
       FP = FP + sum((hdis(1:ncases1) <= rho) & (l(1:ncases1) == 0));
       FN = FN + sum((hdis(1:ncases1) >  rho) & (l(1:ncases1) == 1));
     
-      nnz = nnz + (sum(nonzero_grad_1)+sum(nonzero_grad_1))/2;
+      nnz = nnz + (sum(nonzero_grad_1)+sum(nonzero_grad_2))/2;
           
       batch_bound =  sum(sum(W .* -grad)) + sum(loss(nflip(:)+1+repmat(nb+1,[ncases,1]).*(0:ncases-1)'));
       bound = bound + batch_bound;
@@ -249,8 +253,9 @@ for t=1:maxt
     % normW = [repmat(sqrt(sum(W(:,1:end-1).^2,2)), [1 dtr+1])]; 
     % W = W./normW;
   end
-  
-  fprintf('(%3d/%.3f)', t, eta);
+  time_iter = toc;
+
+  fprintf('(%3d/%.3f/%.2f)', t, eta, time_iter);
 
   if (~verbose || (~param.nval_during && ~param.nval_after) || (verbose && mod(t, verbose) ~= 0))
     fprintf('\r');
@@ -258,7 +263,7 @@ for t=1:maxt
 
   if (verbose && t <= maxiter && mod(t, verbose) == 0)
     fprintf([' ~~~ bound:%.3f > loss:%.3f ~~~ prec:%.3f  rec:%.3f ~~~ norm W=%.2f ~~~ min' ...
-	     ' activity:%.3f ~~~ #useless bits:%d ~~~ #non-zero-gradient:%.1f'], bound/(maxb*verbose), ...
+	     ' activity:%.3f ~~~ #useless bits:%d ~~~ #nonzero-grad:%.1f'], bound/(maxb*verbose), ...
 	    emploss/(maxb*verbose), TP/(TP+FP), TP/(TP+FN), sqrt(sum(W(:).^2)), ...
 	    min( min(r, 1 - r)), n_bits_useless, nnz/(maxb*verbose));
     fprintf('\n');
