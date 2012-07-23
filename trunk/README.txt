@@ -7,7 +7,7 @@ learn similarity preserving hash functions that map high-dimensional
 data onto binary codes.
 
 
-~~~~~~~~~~~~~ Mex compilation (optional)
+~~~~~~~~~~~~~ Mex compilation
 
 Compile utils/hammDist_mex.cpp, which is a faster alternative to
 hammDist.m. The mex implementation uses GCC built-in popcount
