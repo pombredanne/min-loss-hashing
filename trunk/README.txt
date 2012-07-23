@@ -9,7 +9,7 @@ data onto binary codes.
 
 ~~~~~~~~~~~~~ Mex compilation
 
-Compile loss_adj_inf_mex.cpp enabling openmp functionality by running:
+Compile loss_adj_inf_mex.cpp enabling multi-core functionality by running:
 mex loss_adj_inf_mex.cpp CXXFLAGS="\$CXXFLAGS -fopenmp" LDFLAGS="\$LDFLAGS -fopenmp"
 If you are unable to compile this mex file, you can change learnMLH.m
 by uncommenting the matlab code for loss adjusted inference. You can
