@@ -11,13 +11,13 @@ data onto binary codes.
 
 Compile utils/hammDist_mex.cpp, which is a faster alternative to
 hammDist.m. The mex implementation uses GCC built-in popcount
-function. Please make changes to eval_linear_hash.m and eval_labelme.m
-to use hammDist if you are unable to compile the mex file.
+function. If you are unable to compile the mex file, please change
+eval_linear_hash.m and eval_labelme.m to use hammDist.m
 
 Compile utils/accumarray_reverse.cpp, which is used within the
 evaluation function utils/evalution3.m. If you are unable to compile
-this mex file, you can replace evaluation3 with evalution2 (slower) in
-utils/eval_linear_hash.m
+this mex file, you can replace evaluation3 with evalution2 (slower and
+less memory efficient) in utils/eval_linear_hash.m
 
 
 ~~~~~~~~~~~~~ Data
