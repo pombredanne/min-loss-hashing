@@ -2,9 +2,13 @@
 
 This is an implementation of the algorithm presented in the paper
 "Minimal Loss Hashing for Compact Binary Codes, Mohammad Norouzi,
-David J Fleet, ICML 2010", with slight modifications. The goal is to
+David J Fleet, ICML 2011", with slight modifications. The goal is to
 learn similarity preserving hash functions that map high-dimensional
-data onto binary codes.
+data onto binary codes. The code is implemented in Matlab, with a few
+helper functions implemented in C++ for efficiency. Using this
+package, one can re-run the experiments described in the paper on
+Euclidean and semantic 22K LabelMe, and on 6 other datasets (10D
+uniform, mnist, LabelMe, notredame, peekaboom, nursery).
 
 
 ~~~~~~~~~~~~~ Mex compilation
