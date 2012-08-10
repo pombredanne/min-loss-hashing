@@ -4,33 +4,10 @@ This is an implementation of the algorithm presented in the paper
 "Minimal Loss Hashing for Compact Binary Codes, Mohammad Norouzi,
 David J Fleet, ICML 2011", with slight modifications. The goal is to
 learn similarity preserving hash functions that map high-dimensional
-data onto binary codes. The code is implemented in Matlab, with a few
-helper functions implemented in C++ for efficiency. Using this
-package, one can re-run the experiments described in the paper on
-Euclidean and semantic 22K LabelMe, and on 6 other datasets (10D
-uniform, mnist, LabelMe, notredame, peekaboom, nursery).
-
-
-~~~~~~~~~~~~~ Mex compilation
-
-Compile loss_adj_inf_mex.cpp enabling multi-core functionality by running:
-mex loss_adj_inf_mex.cpp CXXFLAGS="\$CXXFLAGS -fopenmp" LDFLAGS="\$LDFLAGS -fopenmp"
-You can set the environment OMP_NUM_THREADS to control the maximum
-number of cores used by loss_adj_inf_mex.
-
-If you are unable to compile loss_adj_inf_mex, you can change
-learnMLH.m by uncommenting the matlab code for loss adjusted
-inference, and commenting the call to loss_adj_inf_mex.
-
-Compile utils/hammDist_mex.cpp, which is a faster alternative to
-hammDist.m. The mex implementation uses GCC built-in popcount
-function. If you are unable to compile the mex file, please change
-eval_linear_hash.m and eval_labelme.m to use hammDist.m
-
-Compile utils/accumarray_reverse.cpp, which is used within the
-evaluation function utils/evalution3.m. If you are unable to compile
-this mex file, you can replace evaluation3 with evalution2 (slower and
-less memory efficient) in utils/eval_linear_hash.m
+data onto binary codes. Using this package, one can re-run the
+experiments described in the paper on Euclidean and semantic 22K
+LabelMe, and on 6 other datasets (10D uniform, mnist, LabelMe,
+notredame, peekaboom, nursery).
 
 
 ~~~~~~~~~~~~~ Data
@@ -51,9 +28,34 @@ directory.
 
 ~~~~~~~~~~~~~ Usage
 
+Run compile (compile.m) to compile all of the required mex files. If
+you cannot compile mex, see below.
+
 RUN.m is the starting point. It includes the code for running
-experiments on different datasets appeared in our paper. It can also
+experiments on different datasets appeared in our paper. It will also
 produce performance plots.
+
+You can set the environment variable OMP_NUM_THREADS to control the
+maximum number of cores used by loss_adj_inf_mex. When other programs
+are running, often setting OMP_NUM_THREADS by hand makes the program
+run faster, because by default loss_adj_inf_mex tries to take up all
+of the cores, and this produces a wasteful competition between
+different processes.
+
+
+~~~~~~~~~~~~~ Alternative to mex compilation
+
+If you are unable to compile loss_adj_inf_mex, you can change
+learnMLH.m by uncommenting the matlab code for loss adjusted
+inference, and commenting the call to loss_adj_inf_mex.
+
+If you are unable to compile utils/hammDist_mex.cpp, please change
+eval_linear_hash.m and eval_labelme.m to use hammDist.m (a slower
+matlab implementation).
+
+If you are unable to compile this utils/accumarray_reverse.cpp, you
+can replace evaluation3 with evalution2 (slower and less memory
+efficient) in utils/eval_linear_hash.m
 
 
 ~~~~~~~~~~~~~ List of files
