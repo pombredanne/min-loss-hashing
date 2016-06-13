@@ -376,7 +376,7 @@ allRect   = findall(H, 'type', 'rectangle');
 allFont   = [allText; allAxes];
 allColor  = [allLines; allText; allAxes; allLights];
 allMarker = [allLines; allPatch; allSurf];
-allEdge   = [allPatch; allSurf];
+allege   = [allPatch; allSurf];
 allCData  = [allImages; allPatch; allSurf];
 
 old.objs = {};
@@ -473,8 +473,8 @@ try
     old = LocalUpdateColors(allAxes, 'zcolor', old);
     old = LocalUpdateColors(allMarker, 'MarkerEdgeColor', old);
     old = LocalUpdateColors(allMarker, 'MarkerFaceColor', old);
-    old = LocalUpdateColors(allEdge, 'EdgeColor', old);
-    old = LocalUpdateColors(allEdge, 'FaceColor', old);
+    old = LocalUpdateColors(allege, 'EdgeColor', old);
+    old = LocalUpdateColors(allege, 'FaceColor', old);
     old = LocalUpdateColors(allCData, 'CData', old);
     
    case {'rgb','cmyk'}
