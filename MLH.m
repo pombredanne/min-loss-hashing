@@ -101,7 +101,7 @@ for zerobias = zerobias_set
   Wset(n).params = params;
   Wset(n).mode = data_in.MODE;
   
-  % Because PCA is not necessarily unique, we store the prinicipal components of the data with the
+  % Because PCA is not necessarily unique, we store the principal components of the data with the
   % learned weights too.
   if (isfield(data_in, 'princComp'))
     Wset(n).princComp = data_in.princComp;
